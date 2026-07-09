@@ -2,10 +2,10 @@
 export const dynamic = 'force-dynamic';
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@/lib/supabase-browser";
+import { adminFetch } from "@/lib/admin-fetch";
 import Image from "next/image";
 
-const EMPTY = { title:"", category:"Botanical & Pressed Flower", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false };
+const EMPTY = { title:"", category:"Resin — Artifacts", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false };
 
 export default function AdminArtworks() {
   const router = useRouter();
@@ -17,25 +17,26 @@ export default function AdminArtworks() {
   const [msg, setMsg] = useState("");
   const mainInputRef = useRef<HTMLInputElement>(null);
   const extraInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createBrowserClient();
 
   useEffect(() => {
-    if (localStorage.getItem("admin_auth") !== "true") { router.push("/admin"); return; }
     load();
   }, []);
 
   const load = async () => {
-    const { data } = await supabase.from("artworks").select("*").order("created_at", { ascending: false });
+    const res = await adminFetch("/api/admin/artworks");
+    const { data } = await res.json();
     setArtworks(data || []);
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const ext = file.name.split(".").pop();
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("artworks").upload(path, file, { upsert: true });
-    if (error) throw error;
-    const { data } = supabase.storage.from("artworks").getPublicUrl(path);
-    return data.publicUrl;
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", "artworks");
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    if (!res.ok) throw new Error(await res.text());
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    return json.url;
   };
 
   const handleMainUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,10 +69,10 @@ export default function AdminArtworks() {
     e.preventDefault(); setLoading(true); setMsg("");
     const payload = { ...form, price: Number(form.price) };
     if (editing) {
-      await supabase.from("artworks").update(payload).eq("id", editing);
+      await adminFetch(`/api/admin/artworks/${editing}`, { method: "PUT", body: JSON.stringify(payload) });
       setMsg("Artwork updated.");
     } else {
-      await supabase.from("artworks").insert(payload);
+      await adminFetch("/api/admin/artworks", { method: "POST", body: JSON.stringify(payload) });
       setMsg("Artwork added.");
     }
     setForm(EMPTY); setEditing(null); setLoading(false); load();
@@ -79,7 +80,7 @@ export default function AdminArtworks() {
 
   const del = async (id: string) => {
     if (!confirm("Delete this artwork?")) return;
-    await supabase.from("artworks").delete().eq("id", id);
+    await adminFetch(`/api/admin/artworks/${id}`, { method: "DELETE" });
     load();
   };
 
@@ -89,7 +90,7 @@ export default function AdminArtworks() {
     <div className="min-h-screen bg-beige dark:bg-dark pt-16">
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="flex items-center gap-4 mb-10">
-          <button onClick={() => router.push("/admin")} className="text-xs text-dark/50 dark:text-beige/50 hover:text-forest dark:hover:text-rose">← Back</button>
+          <button onClick={() => router.push("/admin/dashboard")} className="text-xs text-dark/50 dark:text-beige/50 hover:text-forest dark:hover:text-rose">← Back</button>
           <p className="font-serif text-4xl text-forest dark:text-beige">Artworks</p>
         </div>
 
@@ -107,9 +108,15 @@ export default function AdminArtworks() {
               <label className="text-xs tracking-widest uppercase text-dark/50 dark:text-beige/50 block mb-1">Category</label>
               <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}
                 className="w-full bg-beige dark:bg-dark border-b border-forest/30 dark:border-beige/30 py-2 text-dark dark:text-beige focus:outline-none text-sm">
-                <option>Botanical & Pressed Flower</option>
-                <option>Resin Flower Jewellery</option>
-                <option>Acrylic Paintings</option>
+                <optgroup label="Resin Art">
+                  <option value="Resin — Artifacts">Resin — Artifacts</option>
+                  <option value="Resin — Jewellery — Flower">Resin — Jewellery — Flower</option>
+                  <option value="Resin — Jewellery — Pearl">Resin — Jewellery — Pearl</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value="Oil Pastels">Oil Pastels</option>
+                  <option value="Acrylic Art">Acrylic Art</option>
+                </optgroup>
               </select>
             </div>
             <div>
@@ -181,7 +188,7 @@ export default function AdminArtworks() {
           </div>
         </form>
 
-        {["Botanical & Pressed Flower","Resin Flower Jewellery","Acrylic Paintings"].map(cat => {
+        {["Resin — Artifacts","Resin — Jewellery — Flower","Resin — Jewellery — Pearl","Oil Pastels","Acrylic Art"].map(cat => {
           const pieces = artworks.filter(a => a.category === cat);
           if (!pieces.length) return null;
           return (

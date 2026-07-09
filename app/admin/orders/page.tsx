@@ -2,25 +2,24 @@
 export const dynamic = 'force-dynamic';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@/lib/supabase-browser";
+import { adminFetch } from "@/lib/admin-fetch";
 
 export default function AdminOrders() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
-  const supabase = createBrowserClient();
 
   useEffect(() => {
-    if (localStorage.getItem("admin_auth") !== "true") { router.push("/admin"); return; }
     load();
   }, []);
 
   const load = async () => {
-    const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+    const res = await adminFetch("/api/admin/orders");
+    const { data } = await res.json();
     setOrders(data || []);
   };
 
   const updateStatus = async (id: string, status: string) => {
-    await supabase.from("orders").update({ status }).eq("id", id);
+    await adminFetch(`/api/admin/orders/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
     load();
   };
 
@@ -28,7 +27,7 @@ export default function AdminOrders() {
     <div className="min-h-screen bg-beige dark:bg-dark pt-16">
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="flex items-center gap-4 mb-10">
-          <button onClick={()=>router.push("/admin")} className="text-xs text-dark/50 dark:text-beige/50 hover:text-forest dark:hover:text-rose">← Back</button>
+          <button onClick={()=>router.push("/admin/dashboard")} className="text-xs text-dark/50 dark:text-beige/50 hover:text-forest dark:hover:text-rose">← Back</button>
           <p className="font-serif text-4xl text-forest dark:text-beige">Orders</p>
         </div>
         {orders.length === 0 ? (

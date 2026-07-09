@@ -1,205 +1,195 @@
 "use client";
 import { useEffect, useRef } from "react";
-import Link from "next/link";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const IMAGES = [
-  "https://images.unsplash.com/photo-1490750967868-88df5691cc5e?w=900&q=85",
-  "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=900&q=85",
-  "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=900&q=85",
-  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=85",
-  "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=900&q=85",
-  "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=900&q=85",
-  "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=900&q=85",
-  "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=900&q=85",
-  "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=900&q=85",
+gsap.registerPlugin(ScrollTrigger);
+
+// Hero lands top-center (left 38%, top 2%, w ~24vw)
+const HERO_LAND = { cx: 50, cy: 14, scale: 0.24 }; // cx/cy = % of screen
+
+// Middle slot — centre gap
+const MIDDLE_SLOT = { src: "/art11.jpg", top: 28, left: 38, w: 22, h: 36, row: 1 };
+
+const COLLAGE = [
+  // LEFT cluster — 2 columns, no overlaps
+  // col A: left 0, w 20 → ends 20
+  { src: "/art7.jpg",  top:  0, left:  0,  w: 20, h: 28, row: 0 },
+  { src: "/art9.jpg",  top: 30, left:  0,  w: 20, h: 28, row: 1 },
+  { src: "/art4.jpg",  top: 60, left:  0,  w: 20, h: 26, row: 1 },
+  // col B: left 22, w 14 → ends 36
+  { src: "/art13.jpg", top:  0, left: 22,  w: 14, h: 22, row: 0 },
+  { src: "/art2.jpg",  top: 24, left: 22,  w: 14, h: 24, row: 0 },
+  { src: "/art14.jpg", top: 50, left: 22,  w: 14, h: 26, row: 1 },
+  // RIGHT cluster — 2 columns, no overlaps
+  // col C: left 63, w 18 → ends 81
+  { src: "/art3.jpg",  top:  0, left: 63,  w: 18, h: 26, row: 0 },
+  { src: "/art8.jpg",  top: 28, left: 63,  w: 18, h: 26, row: 1 },
+  { src: "/art10.jpg", top: 56, left: 63,  w: 18, h: 26, row: 1 },
+  // col D: left 83, w 16 → ends 99
+  { src: "/art6.jpg",  top:  0, left: 83,  w: 16, h: 22, row: 0 },
+  { src: "/art12.jpg", top: 24, left: 83,  w: 16, h: 24, row: 0 },
+  { src: "/art1.jpg",  top: 50, left: 83,  w: 16, h: 26, row: 1 },
+  { src: "/art5.jpg",  top: 78, left: 63,  w: 16, h: 20, row: 2 },
 ];
 
-// Layout: hero image fills left ~60%, collage fills right ~40%
-// Cards are positioned so they never overlap
-const CARDS = [
-  // Right column — top to bottom, no overlap
-  { src: IMAGES[1], top: "4%",  left: "62%", w: 200, h: 260 },
-  { src: IMAGES[2], top: "4%",  left: "80%", w: 180, h: 240 },
-  { src: IMAGES[3], top: "46%", left: "62%", w: 190, h: 250 },
-  { src: IMAGES[4], top: "46%", left: "80%", w: 175, h: 230 },
-];
+const ROW_OPACITY = [0.95, 0.72, 0.35];
 
 export default function HeroSection() {
-  const heroRef    = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const textRef    = useRef<HTMLDivElement>(null);
-  const cardsRef   = useRef<(HTMLDivElement | null)[]>([]);
-  const hintRef    = useRef<HTMLDivElement>(null);
+  const wrapRef      = useRef<HTMLDivElement>(null);
+  const stickyRef    = useRef<HTMLDivElement>(null);
+  const heroRef      = useRef<HTMLDivElement>(null);
+  const collageRef   = useRef<HTMLDivElement>(null);
+  const middleRef    = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onScroll = () => {
-      const scrollY = window.scrollY;
+    const ctx = gsap.context(() => {
+      const vw = window.innerWidth;
       const vh = window.innerHeight;
-      // progress 0→1 over first viewport height of scroll
-      const p = Math.min(scrollY / vh, 1);
 
-      // Hero image: zoom out as we scroll (starts at scale 1.08, ends at 1.0)
-      if (heroRef.current) {
-        const scale = 1.08 - p * 0.08;
-        heroRef.current.style.transform = `scale(${scale})`;
-      }
+      // Hero target: top-center
+      const targetX = (HERO_LAND.cx / 100 - 0.5) * vw;
+      const targetY = (HERO_LAND.cy / 100 - 0.5) * vh;
 
-      // Overlay gradient: gets more opaque as we scroll (fade bottom)
-      if (overlayRef.current) {
-        // bottom opacity goes from 0.5 → 0.85
-        const bottomOpacity = 0.5 + p * 0.35;
-        overlayRef.current.style.background =
-          `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,${bottomOpacity}) 100%)`;
-      }
-
-      // Text: stays visible at top, fades out as we scroll
-      if (textRef.current) {
-        const textOpacity = Math.max(1 - p * 2.5, 0);
-        const textY = p * -30;
-        textRef.current.style.opacity = String(textOpacity);
-        textRef.current.style.transform = `translateY(${textY}px)`;
-      }
-
-      // Side cards: fade in as we scroll
-      cardsRef.current.forEach((el, i) => {
-        if (!el) return;
-        const delay = i * 0.12;
-        const cp = Math.max(0, Math.min((p - delay) / (0.6 - delay), 1));
-        el.style.opacity = String(cp);
-        el.style.transform = `translateY(${(1 - cp) * 28}px)`;
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: wrapRef.current,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1.2,
+          pin: stickyRef.current,
+          anticipatePin: 1,
+        },
       });
 
-      // Scroll hint fades out immediately
-      if (hintRef.current) {
-        hintRef.current.style.opacity = String(Math.max(1 - p * 6, 0));
-      }
-    };
+      // Phase 1: hero shrinks to top-center
+      tl.to(heroRef.current, {
+        scale: HERO_LAND.scale,
+        x: targetX,
+        y: targetY,
+        borderRadius: "14px",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.32)",
+        ease: "power2.inOut",
+        duration: 0.6,
+      }, 0);
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll(); // init
-    return () => window.removeEventListener("scroll", onScroll);
+      // Phase 2: collage fades in staggered (page-shift feel)
+      tl.fromTo(
+        collageRef.current!.querySelectorAll<HTMLElement>(".cc"),
+        { opacity: 0, y: 22 },
+        {
+          opacity: (i: number) => ROW_OPACITY[COLLAGE[i].row],
+          y: 0,
+          stagger: 0.025,
+          ease: "power2.out",
+          duration: 0.6,
+        },
+        0.1
+      );
+
+      // Phase 3: middle artwork fades in last — page-shift centrepiece
+      tl.fromTo(middleRef.current,
+        { opacity: 0, scale: 0.92, y: 30 },
+        { opacity: 1, scale: 1, y: 0, ease: "power3.out", duration: 0.5 },
+        0.45
+      );
+
+    });
+
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div style={{ height: "180vh" }}>
-      <div className="sticky top-0 h-screen overflow-hidden bg-dark">
+    <div ref={wrapRef} style={{ height: "300vh" }}>
+      <div ref={stickyRef} className="sticky top-0 w-full overflow-hidden"
+        style={{ height: "100vh" }}>
 
-        {/* ── Hero image (left ~60%) with zoom ── */}
-        <div className="absolute inset-0" style={{ right: "38%" }}>
-          <div
-            ref={heroRef}
-            className="w-full h-full"
-            style={{ transformOrigin: "center center", willChange: "transform" }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={IMAGES[0]}
-              alt="Hero artwork"
-              className="w-full h-full object-cover"
-            />
-          </div>
+        {/* Page bg */}
+        <div className="absolute inset-0 bg-beige dark:bg-dark" />
 
-          {/* Gradient overlay — clear at top, dark at bottom */}
-          <div
-            ref={overlayRef}
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
-              willChange: "background",
-            }}
-          />
-
-          {/* Text ON the hero image */}
-          <div
-            ref={textRef}
-            className="absolute inset-0 flex flex-col justify-end pb-16 pl-10 md:pl-16"
-            style={{ willChange: "transform, opacity" }}
-          >
-            <p className="text-[10px] tracking-[0.4em] uppercase text-white/60 mb-4">
-              Anya by Hiranya
-            </p>
-            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl text-white leading-[1.05] mb-5 max-w-lg">
-              Art rooted in<br />
-              <em className="not-italic" style={{ color: "#DDAA9A" }}>nature</em>
-              {" "}&amp; intention.
-            </h1>
-            <p className="text-sm text-white/60 max-w-xs leading-relaxed mb-8">
-              Botanical art, resin jewellery &amp; acrylic paintings — made slowly, with love.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/portfolio"
-                className="text-[10px] tracking-[0.2em] uppercase bg-white text-dark px-8 py-3.5 hover:bg-beige transition-colors duration-300">
-                View All Works
-              </Link>
-              <Link href="/commission"
-                className="text-[10px] tracking-[0.2em] uppercase border border-white text-white px-8 py-3.5 hover:bg-white hover:text-dark transition-all duration-300">
-                Commission
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Right collage — cards appear on scroll ── */}
-        <div className="absolute top-0 bottom-0 bg-dark/95" style={{ left: "62%", right: 0 }}>
-          {CARDS.map((card, i) => (
-            <div
-              key={i}
-              ref={el => { cardsRef.current[i] = el; }}
-              className="absolute overflow-hidden"
+        {/* Collage — left + right clusters */}
+        <div ref={collageRef} className="absolute inset-0 z-10">
+          {COLLAGE.map((c, i) => (
+            <div key={i} className="cc absolute overflow-hidden rounded-xl"
               style={{
-                top: card.top,
-                left: `calc(${card.left} - 62%)`,
-                width: card.w,
-                height: card.h,
+                top:    `${c.top}%`,
+                left:   `${c.left}%`,
+                width:  `${c.w}vw`,
+                height: `${c.h}vh`,
                 opacity: 0,
                 willChange: "transform, opacity",
-              }}
-            >
+              }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={card.src} alt="" className="w-full h-full object-cover" />
+              <img src={c.src} alt="" className="w-full h-full object-cover"
+                loading="lazy" draggable={false} />
+              {c.row >= 1 && (
+                <div className="absolute inset-0 pointer-events-none" style={{
+                  background: c.row === 1
+                    ? "linear-gradient(to bottom, transparent 25%, rgba(239,231,218,0.5) 100%)"
+                    : "linear-gradient(to bottom, transparent 5%, rgba(239,231,218,0.82) 100%)",
+                }} />
+              )}
+              {c.row >= 1 && (
+                <div className="absolute inset-0 pointer-events-none hidden dark:block" style={{
+                  background: c.row === 1
+                    ? "linear-gradient(to bottom, transparent 25%, rgba(28,28,26,0.5) 100%)"
+                    : "linear-gradient(to bottom, transparent 5%, rgba(28,28,26,0.82) 100%)",
+                }} />
+              )}
             </div>
           ))}
+
+          {/* Screen fog */}
+          <div className="absolute inset-0 pointer-events-none z-20" style={{
+            background: "linear-gradient(to bottom, transparent 50%, rgba(239,231,218,0.7) 78%, rgba(239,231,218,1) 100%)",
+          }} />
+          <div className="absolute inset-0 pointer-events-none z-20 hidden dark:block" style={{
+            background: "linear-gradient(to bottom, transparent 50%, rgba(28,28,26,0.7) 78%, rgba(28,28,26,1) 100%)",
+          }} />
         </div>
 
-        {/* ── Bottom gradient — blends hero into page background ── */}
-        <div
-          className="absolute bottom-0 left-0 right-0 pointer-events-none z-30"
+        {/* Middle centrepiece — different artwork in the gap */}
+        <div ref={middleRef}
+          className="absolute overflow-hidden rounded-xl z-15"
           style={{
-            height: "220px",
-            background: "linear-gradient(to bottom, transparent 0%, var(--color-beige, #EFE7DA) 100%)",
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-0 right-0 pointer-events-none z-30 dark-gradient"
-          style={{ height: "220px" }}
-        />
+            top:    `${MIDDLE_SLOT.top}%`,
+            left:   `${MIDDLE_SLOT.left}%`,
+            width:  `${MIDDLE_SLOT.w}vw`,
+            height: `${MIDDLE_SLOT.h}vh`,
+            opacity: 0,
+            willChange: "transform, opacity",
+            zIndex: 15,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
+          }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={MIDDLE_SLOT.src} alt="" className="w-full h-full object-cover"
+            draggable={false} />
+        </div>
+
+        {/* Hero image — full screen, shrinks to top-center */}
+        <div ref={heroRef}
+          className="absolute inset-0 z-20 overflow-hidden"
+          style={{ transformOrigin: "center center", willChange: "transform, border-radius, box-shadow" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/hero.png" alt="AanyaByHiranya"
+            className="w-full h-full object-cover" />
+        </div>
 
         {/* Scroll hint */}
-        <div
-          ref={hintRef}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2"
-          style={{ willChange: "opacity" }}
-        >
-          <span className="text-[9px] tracking-[0.3em] uppercase text-white/40">Scroll</span>
-          <div className="relative h-10 w-px overflow-hidden bg-white/20">
-            <div className="absolute top-0 h-[40%] w-full bg-white/60"
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 opacity-40">
+          <div className="relative h-10 w-px overflow-hidden bg-white/40">
+            <div className="absolute top-0 h-[40%] w-full bg-white"
               style={{ animation: "scrollLine 1.5s ease-in-out infinite" }} />
           </div>
         </div>
-      </div>
 
-      <style>{`
-        @keyframes scrollLine {
-          0%   { transform: translateY(-100%); }
-          100% { transform: translateY(300%); }
-        }
-        .dark .dark-gradient {
-          background: linear-gradient(to bottom, transparent 0%, #1C1C1A 100%);
-        }
-        .dark-gradient {
-          background: transparent;
-        }
-      `}</style>
+        <style>{`
+          @keyframes scrollLine {
+            0%   { transform: translateY(-100%); }
+            100% { transform: translateY(300%); }
+          }
+        `}</style>
+      </div>
     </div>
   );
 }

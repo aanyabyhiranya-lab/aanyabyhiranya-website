@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function ArtCard({ art }: { art: any }) {
   const allImages: string[] = [art.image_url, ...(art.images || [])].filter(Boolean);
   const wa = `https://wa.me/919392640611?text=Hi! I'm interested in "${art.title}" — could you share more details?`;
-  const ig = "https://instagram.com/aanyabyhiranya";
+  const ig = "https://instagram.com/AanyaByHiranya";
   const [current, setCurrent] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -28,7 +28,8 @@ export default function ArtCard({ art }: { art: any }) {
           onMouseEnter={startSlide} onMouseLeave={stopSlide}>
           {allImages.map((img, i) => (
             <div key={i} className={`absolute inset-0 transition-opacity duration-500 ${i === current ? "opacity-100" : "opacity-0"}`}>
-              <Image src={img} alt={`${art.title} ${i + 1}`} fill className="object-cover" />
+              <Image src={img} alt={`${art.title} ${i + 1}`} fill className="object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
             </div>
           ))}
           <div className="absolute top-3 right-3 z-10">

@@ -1,63 +1,101 @@
+export const revalidate = 60;
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase-server";
-import ArtCard from "./ArtCard";
 
-const PLACEHOLDER = [
-  { id:"1", title:"Pressed Botanicals I", category:"Botanical & Pressed Flower", price:3200, availability:"Available", medium:"Pressed flowers on paper", image_url:"https://images.unsplash.com/photo-1490750967868-88df5691cc5e?w=800&q=80", images:[] },
-  { id:"2", title:"Wild Garden", category:"Botanical & Pressed Flower", price:2800, availability:"Sold", medium:"Pressed flowers, frame", image_url:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80", images:[] },
-  { id:"3", title:"Meadow Study", category:"Botanical & Pressed Flower", price:4500, availability:"On Request", medium:"Mixed botanicals", image_url:"https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&q=80", images:[] },
-  { id:"4", title:"Resin Garden Ring", category:"Resin Flower Jewellery", price:1800, availability:"Available", medium:"Resin, pressed flowers", image_url:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", images:[] },
-  { id:"5", title:"Memory Pendant", category:"Resin Flower Jewellery", price:2200, availability:"On Request", medium:"Custom resin jewellery", image_url:"https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&q=80", images:[] },
-  { id:"6", title:"Bloom Earrings", category:"Resin Flower Jewellery", price:1400, availability:"Available", medium:"Resin, dried petals", image_url:"https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80", images:[] },
-  { id:"7", title:"Forest Memory", category:"Acrylic Paintings", price:8000, availability:"Available", medium:"Acrylic on canvas, 24×30\"", image_url:"https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&q=80", images:[] },
-  { id:"8", title:"Tide", category:"Acrylic Paintings", price:6500, availability:"Sold", medium:"Acrylic on canvas, 18×24\"", image_url:"https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&q=80", images:[] },
-  { id:"9", title:"Root & Rise", category:"Acrylic Paintings", price:9500, availability:"On Request", medium:"Acrylic on canvas, 30×40\"", image_url:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80", images:[] },
-];
+export const metadata: Metadata = {
+  title: "All Works",
+  description: "A collection of resin art, oil pastel works, and acrylic paintings — each piece made slowly, with intention.",
+};
 
-const CATEGORIES = [
-  { key:"Botanical & Pressed Flower", label:"Botanical & Pressed Flower Art", desc:"Pressed flower compositions and nature-inspired pieces with an organic, soft visual style." },
-  { key:"Resin Flower Jewellery", label:"Resin Flower Jewellery", desc:"Pressed flowers preserved in resin — jewellery and small art objects, including custom memory-based pieces." },
-  { key:"Acrylic Paintings", label:"Acrylic Paintings", desc:"Acrylic works on canvas or paper — abstract, expressive, and nature-influenced, focusing on texture, emotion, and storytelling." },
-];
-
-async function getArtworks() {
+async function getCounts() {
   try {
     const supabase = createClient();
-    const { data } = await supabase.from("artworks").select("*").order("created_at", { ascending: false });
-    return data && data.length > 0 ? data : PLACEHOLDER;
-  } catch { return PLACEHOLDER; }
+    const { data } = await supabase.from("artworks").select("category");
+    if (!data) return { resin: 0, paintings: 0 };
+    return {
+      resin:   data.filter(a => a.category?.startsWith("Resin")).length,
+    paintings: data.filter(a => ["Oil Pastels","Acrylic Art"].includes(a.category)).length,
+    };
+  } catch { return { resin: 0, paintings: 0 }; }
 }
 
+const CATEGORIES = [
+  {
+    key: "resin",
+    href: "/portfolio/resin",
+    label: "Resin Art",
+    sub: "Artifacts · Jewellery",
+    desc: "Handcrafted resin works — decorative artifacts and wearable jewellery, each piece capturing nature in its most preserved form.",
+    bg: "bg-forest/8 dark:bg-forest/15",
+    border: "border-forest/20 dark:border-forest/30",
+    hover: "hover:border-forest",
+    accent: "text-forest dark:text-rose",
+    img: "/art1.jpg",
+  },
+  {
+    key: "paintings",
+    href: "/portfolio/paintings",
+    label: "Oil Pastels & Acrylic Art",
+    sub: "Oil Pastels · Acrylic Art",
+    desc: "Works on paper and canvas — oil pastels and acrylics, exploring texture, colour, and the quiet stories found in nature.",
+    bg: "bg-teal/5 dark:bg-teal/10",
+    border: "border-teal/20 dark:border-teal/20",
+    hover: "hover:border-teal",
+    accent: "text-teal dark:text-rose",
+    img: "/art9.jpg",
+  },
+];
+
 export default async function Portfolio() {
-  const artworks = await getArtworks();
+  const counts = await getCounts();
+  const countMap: Record<string, number> = { resin: counts.resin, paintings: counts.paintings };
 
   return (
     <div className="bg-beige dark:bg-dark min-h-screen pt-16">
       <div className="max-w-7xl mx-auto px-6 md:px-16 py-24">
+
         <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">Portfolio</p>
-        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-6">Works</h1>
+        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Works</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-20">
-          A collection of paintings, botanical compositions, and handcrafted jewellery — each piece made slowly, with intention.
+          A collection of resin art, oil pastel works, and acrylic paintings — each piece made slowly, with intention.
         </p>
 
-        {CATEGORIES.map(cat => {
-          const pieces = artworks.filter((a: any) => a.category === cat.key);
-          return (
-            <section key={cat.key} className="mb-28">
-              <div className="border-t border-forest/20 dark:border-beige/20 pt-10 mb-12 reveal">
-                <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-3">{cat.label}</h2>
-                <p className="text-sm text-dark/60 dark:text-beige/60 max-w-lg">{cat.desc}</p>
+        {/* Top-level category cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          {CATEGORIES.map(cat => (
+            <Link key={cat.key} href={cat.href}
+              className={`group relative overflow-hidden border ${cat.border} ${cat.hover} ${cat.bg} transition-all duration-300 p-8 flex flex-col justify-between min-h-[320px]`}>
+
+              {/* Background image — subtle */}
+              <div className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity duration-500">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={cat.img} alt="" className="w-full h-full object-cover" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">
-                {pieces.map((art: any, i: number) => (
-                  <div key={art.id} className={`reveal reveal-delay-${Math.min(i+1,3)}`}>
-                    <ArtCard art={art} />
-                  </div>
-                ))}
+
+              <div className="relative z-10">
+                <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-1">
+                  {countMap[cat.key] > 0 ? `${countMap[cat.key]} piece${countMap[cat.key] === 1 ? "" : "s"}` : "Collection"}
+                </p>
+                <p className="text-xs tracking-widest uppercase text-dark/30 dark:text-beige/30">{cat.sub}</p>
               </div>
-            </section>
-          );
-        })}
+
+              <div className="relative z-10">
+                <h2 className={`font-serif text-4xl md:text-5xl mb-3 group-hover:translate-x-1 transition-transform duration-300 text-forest dark:text-beige`}>
+                  {cat.label}
+                </h2>
+                <p className="text-sm text-dark/60 dark:text-beige/60 leading-relaxed mb-6 max-w-xs">
+                  {cat.desc}
+                </p>
+                <span className={`text-xs tracking-widest uppercase ${cat.accent} flex items-center gap-2`}>
+                  Explore
+                  <span className="group-hover:translate-x-2 transition-transform duration-300 inline-block">→</span>
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import ArtworkGallery from "@/app/artwork/[id]/ArtworkGallery";
@@ -14,24 +16,39 @@ const PLACEHOLDER: any[] = [
   { id:"9", title:"Root & Rise", category:"Acrylic Paintings", price:9500, availability:"On Request", medium:"Acrylic on canvas, 30×40\"", description:"", image_url:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80", images:[] },
 ];
 
-export default async function ArtworkDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-
-  // try Supabase first, fall back to placeholder
-  let art: any = null;
+const getArtwork = cache(async (id: string) => {
   if (id.includes("-")) {
     const supabase = createClient();
     const { data } = await supabase.from("artworks").select("*").eq("id", id).single();
-    art = data;
-  } else {
-    art = PLACEHOLDER.find(p => p.id === id);
+    return data;
   }
+  return PLACEHOLDER.find(p => p.id === id) ?? null;
+});
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const art = await getArtwork(id);
+  if (!art) return {};
+
+  const description = art.description || `${art.medium || art.category} — ₹${art.price?.toLocaleString()}, ${art.availability}.`;
+  const image = art.image_url;
+  return {
+    title: art.title,
+    description,
+    openGraph: image ? { images: [{ url: image }] } : undefined,
+    twitter: image ? { card: "summary_large_image", images: [image] } : undefined,
+  };
+}
+
+export default async function ArtworkDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const art = await getArtwork(id);
 
   if (!art) notFound();
 
   const allImages: string[] = [art.image_url, ...(art.images || [])].filter(Boolean);
   const wa = `https://wa.me/919392640611?text=Hi! I'm interested in "${art.title}" — could you share more details?`;
-  const ig = "https://instagram.com/aanyabyhiranya";
+  const ig = "https://instagram.com/AanyaByHiranya";
 
   return (
     <div className="min-h-screen bg-beige dark:bg-dark pt-16">

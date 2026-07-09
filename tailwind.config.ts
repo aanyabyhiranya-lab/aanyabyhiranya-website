@@ -16,15 +16,15 @@ const config: Config = {
         teal:    "#165A63",
         dark:    "#1C1C1A",
         darkbg:  "#242420",
-        darksurface: "#2E2E2A",
+        darksurface: "#252520",
       },
       fontFamily: {
-        serif: ["Cormorant Garamond", "Georgia", "serif"],
+        serif: ["Cormorant", "Georgia", "serif"],
         sans:  ["DM Sans", "Inter", "system-ui", "sans-serif"],
       },
       letterSpacing: { widest: "0.2em" },
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/typography")],
 };
 export default config;

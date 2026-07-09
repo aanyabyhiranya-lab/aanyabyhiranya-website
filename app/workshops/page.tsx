@@ -1,4 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Workshops & Collaborations",
+  description: "Intimate, hands-on workshops in botanical pressing and resin art, plus brand and event collaborations rooted in sustainability and craft.",
+};
 
 export default function Workshops() {
   return (
