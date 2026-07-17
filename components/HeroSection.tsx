@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -11,6 +11,7 @@ const HERO_LAND = { cx: 50, cy: 14, scale: 0.24 }; // cx/cy = % of screen
 // Middle slot — centre gap
 const MIDDLE_SLOT = { src: "/art11.jpg", top: 28, left: 38, w: 22, h: 36, row: 1 };
 
+// Desktop: wide 4-column layout — vw/vh tuned for screens with room to spread out.
 const COLLAGE = [
   // LEFT cluster — 2 columns, no overlaps
   // col A: left 0, w 20 → ends 20
@@ -33,6 +34,24 @@ const COLLAGE = [
   { src: "/art5.jpg",  top: 78, left: 63,  w: 16, h: 20, row: 2 },
 ];
 
+// Mobile: same tiles, but re-tuned for a ~390px-wide portrait screen. The desktop
+// widths above (14-20vw) combined with the same heights (22-28vh) produce tall,
+// narrow slivers on a phone — e.g. 14vw is ~55px wide but 24vh is still ~190px
+// tall, so object-cover crops away most of each painting. This uses a plain
+// 2-column grid with near-square tiles instead, so full compositions stay visible.
+const COLLAGE_MOBILE = [
+  { src: "/art7.jpg",  top:  2, left:  4, w: 43, h: 20, row: 0 },
+  { src: "/art3.jpg",  top:  2, left: 53, w: 43, h: 20, row: 0 },
+  { src: "/art9.jpg",  top: 24, left:  4, w: 43, h: 20, row: 1 },
+  { src: "/art8.jpg",  top: 24, left: 53, w: 43, h: 20, row: 1 },
+  { src: "/art4.jpg",  top: 46, left:  4, w: 43, h: 20, row: 1 },
+  { src: "/art10.jpg", top: 46, left: 53, w: 43, h: 20, row: 1 },
+  { src: "/art13.jpg", top: 68, left:  4, w: 43, h: 18, row: 2 },
+  { src: "/art6.jpg",  top: 68, left: 53, w: 43, h: 18, row: 2 },
+];
+
+const MIDDLE_SLOT_MOBILE = { src: "/art11.jpg", top: 30, left: 27, w: 46, h: 24, row: 1 };
+
 const ROW_OPACITY = [0.95, 0.72, 0.35];
 
 export default function HeroSection() {
@@ -41,6 +60,14 @@ export default function HeroSection() {
   const heroRef      = useRef<HTMLDivElement>(null);
   const collageRef   = useRef<HTMLDivElement>(null);
   const middleRef    = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const activeCollage = isMobile ? COLLAGE_MOBILE : COLLAGE;
+  const activeMiddle  = isMobile ? MIDDLE_SLOT_MOBILE : MIDDLE_SLOT;
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
