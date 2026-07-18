@@ -62,7 +62,7 @@ export default async function ArtworkDetail({ params }: { params: Promise<{ id: 
 
           <div className="md:sticky md:top-24">
             <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">{art.category}</p>
-            <h1 className="font-serif text-4xl md:text-5xl text-forest dark:text-beige mb-4">{art.title}</h1>
+            <h1 className="font-script text-4xl md:text-5xl text-forest dark:text-beige mb-4">{art.title}</h1>
             {art.medium && <p className="text-sm text-dark/60 dark:text-beige/60 mb-6">{art.medium}</p>}
             <p className="font-serif text-3xl text-forest dark:text-rose mb-6">₹{art.price?.toLocaleString()}</p>
 

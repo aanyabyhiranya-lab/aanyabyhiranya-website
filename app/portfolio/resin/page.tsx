@@ -34,7 +34,7 @@ export default async function ResinPage() {
           <span className="text-forest dark:text-beige">Resin Art</span>
         </div>
 
-        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Art</h1>
+        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Art</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
           Handcrafted resin works: from decorative artifacts to wearable jewellery, each piece capturing nature in its most preserved form.
         </p>

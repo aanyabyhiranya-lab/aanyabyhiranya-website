@@ -35,7 +35,7 @@ export default async function ResinJewelleryPage() {
           <span className="text-forest dark:text-beige">Jewellery</span>
         </div>
 
-        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Jewellery</h1>
+        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Jewellery</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
           Delicate wearable pieces: pressed flowers and pearls preserved in resin, each one a small world held in your hands.
         </p>

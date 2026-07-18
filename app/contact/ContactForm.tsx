@@ -21,7 +21,7 @@ export default function ContactForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
           <div>
             <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">Get in Touch</p>
-            <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-8">Contact</h1>
+            <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-8">Contact</h1>
             <p className="text-dark/70 dark:text-beige/70 leading-relaxed mb-10 max-w-sm">
               For inquiries, collaborations, or just to say hello. Reach out through any of the channels below.
             </p>

@@ -28,7 +28,7 @@ export default async function Blog() {
     <div className="bg-beige dark:bg-dark min-h-screen pt-16">
       <div className="max-w-7xl mx-auto px-6 md:px-16 py-24">
         <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">Writing</p>
-        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Journal</h1>
+        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Journal</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-20">
           Reflections, experiments, and stories from the studio.
         </p>

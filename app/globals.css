@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Dancing+Script:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Yellowtail&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -12,7 +12,7 @@
   --color-darksurface: #2E2E2A;
   --font-family-serif: "Cormorant", Georgia, serif;
   --font-family-sans:  "DM Sans", Inter, system-ui, sans-serif;
-  --font-family-script: "Dancing Script", cursive;
+  --font-family-script: "Yellowtail", cursive;
 }
 
 html { scroll-behavior: smooth; }

@@ -20,7 +20,7 @@ export default function CommissionForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
           <div>
             <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">Bespoke Work</p>
-            <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-8">Commission a Piece</h1>
+            <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-8">Commission a Piece</h1>
             <p className="text-dark/70 dark:text-beige/70 leading-relaxed mb-6 max-w-sm">
               Hiranya takes on a limited number of commissions each season. Each piece is made with full attention and care.
             </p>

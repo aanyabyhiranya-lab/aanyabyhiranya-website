@@ -71,7 +71,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-4">
           {new Date(post.created_at).toLocaleDateString("en-IN", { year:"numeric", month:"long", day:"numeric" })}
         </p>
-        <h1 className="font-serif text-4xl md:text-5xl text-forest dark:text-beige mb-8 leading-tight">
+        <h1 className="font-script text-4xl md:text-5xl text-forest dark:text-beige mb-8 leading-tight">
           {post.title}
         </h1>
         {post.excerpt && (

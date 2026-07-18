@@ -34,7 +34,7 @@ export default async function PaintingsPage() {
           <span className="text-forest dark:text-beige">Oil Pastels & Acrylic Art</span>
         </div>
 
-        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Oil Pastels & Acrylic Art</h1>
+        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Oil Pastels & Acrylic Art</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-20">
           Works on paper and canvas: oil pastels and acrylics, each piece exploring texture, colour, and the quiet stories found in nature.
         </p>

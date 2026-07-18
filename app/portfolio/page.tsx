@@ -56,7 +56,7 @@ export default async function Portfolio() {
       <div className="max-w-7xl mx-auto px-6 md:px-16 py-24">
 
         <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">Portfolio</p>
-        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Works</h1>
+        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Works</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-20">
           A collection of resin art, oil pastel works, and acrylic paintings: each piece made slowly, with intention.
         </p>
