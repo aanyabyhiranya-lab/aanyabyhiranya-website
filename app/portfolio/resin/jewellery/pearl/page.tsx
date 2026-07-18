@@ -6,14 +6,14 @@ import ArtCard from "../../../ArtCard";
 
 export const metadata: Metadata = {
   title: "Pearl Jewellery",
-  description: "Pearl and resin combinations — elegant, minimal jewellery with a natural soul.",
+  description: "Pearl and resin combinations: elegant, minimal jewellery with a natural soul.",
 };
 
 async function getArtworks() {
   try {
     const supabase = createClient();
     const { data } = await supabase.from("artworks").select("*")
-      .eq("category", "Resin — Jewellery — Pearl").order("created_at", { ascending: false });
+      .eq("category", "Resin / Jewellery / Pearl").order("created_at", { ascending: false });
     return data || [];
   } catch { return []; }
 }
@@ -34,10 +34,10 @@ export default async function PearlPage() {
         </div>
         <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Pearl Jewellery</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
-          Pearl and resin combinations — elegant, minimal jewellery with a natural soul.
+          Pearl and resin combinations: elegant, minimal jewellery with a natural soul.
         </p>
         {artworks.length === 0 ? (
-          <p className="text-dark/40 dark:text-beige/40">No pieces here yet — check back soon.</p>
+          <p className="text-dark/40 dark:text-beige/40">No pieces here yet. Check back soon.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">
             {artworks.map((art: any, i: number) => (

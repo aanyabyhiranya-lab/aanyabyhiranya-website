@@ -19,14 +19,14 @@ export default function Workshops() {
             <p className="text-dark/70 dark:text-beige/70 leading-relaxed mb-6">
               Hiranya hosts intimate, hands-on workshops exploring botanical pressing, resin art, and slow creative practices. Sessions are kept small to allow for genuine connection and learning.
             </p>
-            <p className="text-sm text-dark/50 dark:text-beige/50 italic">More coming soon — reach out to collaborate.</p>
+            <p className="text-sm text-dark/50 dark:text-beige/50 italic">More coming soon. Reach out to collaborate.</p>
           </div>
           <div className="border-t border-forest/20 dark:border-beige/20 pt-10">
             <h2 className="font-serif text-3xl text-forest dark:text-beige mb-4">Brand & Event Collaborations</h2>
             <p className="text-dark/70 dark:text-beige/70 leading-relaxed mb-6">
               Open to collaborations with brands, spaces, and events that share a commitment to sustainability, craft, and intentional living.
             </p>
-            <p className="text-sm text-dark/50 dark:text-beige/50 italic">More coming soon — reach out to collaborate.</p>
+            <p className="text-sm text-dark/50 dark:text-beige/50 italic">More coming soon. Reach out to collaborate.</p>
           </div>
         </div>
 

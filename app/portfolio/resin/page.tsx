@@ -6,14 +6,14 @@ import ArtCard from "../ArtCard";
 
 export const metadata: Metadata = {
   title: "Resin Art",
-  description: "Handcrafted resin works — from decorative artifacts to wearable jewellery, each piece capturing nature in its most preserved form.",
+  description: "Handcrafted resin works: from decorative artifacts to wearable jewellery, each piece capturing nature in its most preserved form.",
 };
 
 async function getArtworks(category: string) {
   try {
     const supabase = createClient();
     const { data } = await supabase.from("artworks").select("*")
-      .ilike("category", `Resin — ${category}%`)
+      .ilike("category", `Resin / ${category}%`)
       .order("created_at", { ascending: false });
     return data || [];
   } catch { return []; }
@@ -36,7 +36,7 @@ export default async function ResinPage() {
 
         <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Art</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
-          Handcrafted resin works — from decorative artifacts to wearable jewellery, each piece capturing nature in its most preserved form.
+          Handcrafted resin works: from decorative artifacts to wearable jewellery, each piece capturing nature in its most preserved form.
         </p>
 
         {/* Subcategory cards — Amazon-style entry points */}
@@ -45,13 +45,13 @@ export default async function ResinPage() {
             className="group relative overflow-hidden aspect-[4/3] bg-forest/5 dark:bg-forest/10 border border-forest/15 dark:border-beige/10 hover:border-forest dark:hover:border-rose transition-all duration-300">
             <div className="absolute inset-0 flex flex-col justify-end p-8">
               <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2">
-                {artifacts.length ? `${artifacts.length} piece${artifacts.length === 1 ? "" : "s"}` : "—"}
+                {artifacts.length ? `${artifacts.length} piece${artifacts.length === 1 ? "" : "s"}` : "New"}
               </p>
               <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
                 Artifacts
               </h2>
               <p className="text-sm text-dark/55 dark:text-beige/55 max-w-xs">
-                Decorative resin objects — vases, bowls, and sculptural pieces for the home.
+                Decorative resin objects: vases, bowls, and sculptural pieces for the home.
               </p>
               <span className="mt-4 text-xs tracking-widest uppercase text-forest dark:text-rose">
                 Explore →
@@ -63,13 +63,13 @@ export default async function ResinPage() {
             className="group relative overflow-hidden aspect-[4/3] bg-rose/5 dark:bg-rose/10 border border-rose/15 dark:border-beige/10 hover:border-rose transition-all duration-300">
             <div className="absolute inset-0 flex flex-col justify-end p-8">
               <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2">
-                {jewellery.length ? `${jewellery.length} piece${jewellery.length === 1 ? "" : "s"}` : "—"}
+                {jewellery.length ? `${jewellery.length} piece${jewellery.length === 1 ? "" : "s"}` : "New"}
               </p>
               <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
                 Jewellery
               </h2>
               <p className="text-sm text-dark/55 dark:text-beige/55 max-w-xs">
-                Wearable resin pieces — flower and pearl collections, each one unique.
+                Wearable resin pieces: flower and pearl collections, each one unique.
               </p>
               <span className="mt-4 text-xs tracking-widest uppercase text-rose">
                 Explore →

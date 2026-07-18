@@ -12,7 +12,7 @@ const SITE_DESCRIPTION = "Hiranya is a multidisciplinary artist working across a
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "AanyaByHiranya — Art rooted in nature, memory, and slow intention.",
+    default: "AanyaByHiranya: Art rooted in nature, memory, and slow intention.",
     template: "%s | AanyaByHiranya",
   },
   description: SITE_DESCRIPTION,

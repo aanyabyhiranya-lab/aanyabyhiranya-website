@@ -34,7 +34,7 @@ export default async function Blog() {
         </p>
 
         {posts.length === 0 ? (
-          <p className="text-dark/40 dark:text-beige/40">No posts yet — check back soon.</p>
+          <p className="text-dark/40 dark:text-beige/40">No posts yet. Check back soon.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
             {posts.map((post: any) => {

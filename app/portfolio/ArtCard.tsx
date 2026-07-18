@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function ArtCard({ art }: { art: any }) {
   const allImages: string[] = [art.image_url, ...(art.images || [])].filter(Boolean);
-  const wa = `https://wa.me/919392640611?text=Hi! I'm interested in "${art.title}" — could you share more details?`;
+  const wa = `https://wa.me/919392640611?text=Hi! I'm interested in "${art.title}". Could you share more details?`;
   const ig = "https://instagram.com/AanyaByHiranya";
   const [current, setCurrent] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);

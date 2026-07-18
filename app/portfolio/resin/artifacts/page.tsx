@@ -6,7 +6,7 @@ import ArtCard from "../../ArtCard";
 
 export const metadata: Metadata = {
   title: "Resin Artifacts",
-  description: "Decorative resin objects — vases, bowls, and sculptural pieces, each one made slowly with intention.",
+  description: "Decorative resin objects: vases, bowls, and sculptural pieces, each one made slowly with intention.",
 };
 
 async function getArtworks(category: string) {
@@ -19,7 +19,7 @@ async function getArtworks(category: string) {
 }
 
 export default async function ArtifactsPage() {
-  const artworks = await getArtworks("Resin — Artifacts");
+  const artworks = await getArtworks("Resin / Artifacts");
   return (
     <div className="bg-beige dark:bg-dark min-h-screen pt-16">
       <div className="max-w-7xl mx-auto px-6 md:px-16 py-24">
@@ -32,10 +32,10 @@ export default async function ArtifactsPage() {
         </div>
         <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Artifacts</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
-          Decorative resin objects — vases, bowls, and sculptural pieces, each one made slowly with intention.
+          Decorative resin objects: vases, bowls, and sculptural pieces, each one made slowly with intention.
         </p>
         {artworks.length === 0 ? (
-          <p className="text-dark/40 dark:text-beige/40">No pieces here yet — check back soon.</p>
+          <p className="text-dark/40 dark:text-beige/40">No pieces here yet. Check back soon.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">
             {artworks.map((art: any, i: number) => (

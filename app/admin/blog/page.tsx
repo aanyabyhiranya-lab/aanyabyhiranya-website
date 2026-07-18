@@ -200,7 +200,7 @@ export default function AdminBlog() {
 
             {/* Medium URL */}
             <div>
-              <label className="text-xs tracking-widest uppercase text-dark/50 dark:text-beige/50 block mb-1">Medium Article URL <span className="normal-case text-dark/30 dark:text-beige/30">(optional — if set, clicking the post opens Medium)</span></label>
+              <label className="text-xs tracking-widest uppercase text-dark/50 dark:text-beige/50 block mb-1">Medium Article URL <span className="normal-case text-dark/30 dark:text-beige/30">(optional, if set, clicking the post opens Medium)</span></label>
               <input value={form.medium_url} onChange={e => setForm({ ...form, medium_url: e.target.value })}
                 placeholder="https://medium.com/@yourhandle/article-title"
                 className="w-full bg-transparent border-b border-forest/30 dark:border-beige/30 py-2 text-dark dark:text-beige focus:outline-none focus:border-forest text-sm placeholder:opacity-30 transition-colors" />
@@ -326,7 +326,7 @@ export default function AdminBlog() {
                 onChange={e => setForm({ ...form, published: e.target.checked })}
                 className="w-4 h-4 accent-forest" />
               <span className="text-sm text-dark/70 dark:text-beige/70">
-                Published — visible on the site
+                Published (visible on the site)
               </span>
             </label>
           </div>

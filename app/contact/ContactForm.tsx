@@ -23,7 +23,7 @@ export default function ContactForm() {
             <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">Get in Touch</p>
             <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-8">Contact</h1>
             <p className="text-dark/70 dark:text-beige/70 leading-relaxed mb-10 max-w-sm">
-              For inquiries, collaborations, or just to say hello — reach out through any of the channels below.
+              For inquiries, collaborations, or just to say hello. Reach out through any of the channels below.
             </p>
             <div className="flex flex-col gap-4">
               <a href="mailto:Aanyabyhiranya@gmail.com" className="flex items-center gap-2 text-sm text-dark/70 dark:text-beige/70 hover:text-forest dark:hover:text-rose transition-colors">
@@ -31,11 +31,11 @@ export default function ContactForm() {
               </a>
               <a href="https://instagram.com/AanyaByHiranya" target="_blank" rel="noopener noreferrer"
                 className="text-sm text-dark/70 dark:text-beige/70 hover:text-forest dark:hover:text-rose transition-colors">
-                Instagram — @AanyaByHiranya
+                Instagram: @AanyaByHiranya
               </a>
               <a href="https://wa.me/919392640611" target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-dark/70 dark:text-beige/70 hover:text-forest dark:hover:text-rose transition-colors">
-                <MessageCircle size={16} /> WhatsApp — +91 93926 40611
+                <MessageCircle size={16} /> WhatsApp: +91 93926 40611
               </a>
             </div>
           </div>

@@ -6,7 +6,7 @@ import ArtCard from "../ArtCard";
 
 export const metadata: Metadata = {
   title: "Acrylic Art",
-  description: "Acrylic paintings on canvas — abstract, nature-influenced, and deeply personal.",
+  description: "Acrylic paintings on canvas: abstract, nature-influenced, and deeply personal.",
 };
 
 async function getArtworks() {
@@ -30,10 +30,10 @@ export default async function AcrylicPage() {
         </div>
         <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Acrylic Art</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
-          Acrylic paintings on canvas — abstract, nature-influenced, and deeply personal.
+          Acrylic paintings on canvas: abstract, nature-influenced, and deeply personal.
         </p>
         {artworks.length === 0 ? (
-          <p className="text-dark/40 dark:text-beige/40">No pieces here yet — check back soon.</p>
+          <p className="text-dark/40 dark:text-beige/40">No pieces here yet. Check back soon.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">
             {artworks.map((art: any, i: number) => (

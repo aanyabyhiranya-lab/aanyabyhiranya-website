@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase-server";
 
 export const metadata: Metadata = {
   title: "All Works",
-  description: "A collection of resin art, oil pastel works, and acrylic paintings — each piece made slowly, with intention.",
+  description: "A collection of resin art, oil pastel works, and acrylic paintings: each piece made slowly, with intention.",
 };
 
 async function getCounts() {
@@ -26,7 +26,7 @@ const CATEGORIES = [
     href: "/portfolio/resin",
     label: "Resin Art",
     sub: "Artifacts · Jewellery",
-    desc: "Handcrafted resin works — decorative artifacts and wearable jewellery, each piece capturing nature in its most preserved form.",
+    desc: "Handcrafted resin works: decorative artifacts and wearable jewellery, each piece capturing nature in its most preserved form.",
     bg: "bg-forest/8 dark:bg-forest/15",
     border: "border-forest/20 dark:border-forest/30",
     hover: "hover:border-forest",
@@ -38,7 +38,7 @@ const CATEGORIES = [
     href: "/portfolio/paintings",
     label: "Oil Pastels & Acrylic Art",
     sub: "Oil Pastels · Acrylic Art",
-    desc: "Works on paper and canvas — oil pastels and acrylics, exploring texture, colour, and the quiet stories found in nature.",
+    desc: "Works on paper and canvas: oil pastels and acrylics, exploring texture, colour, and the quiet stories found in nature.",
     bg: "bg-teal/5 dark:bg-teal/10",
     border: "border-teal/20 dark:border-teal/20",
     hover: "hover:border-teal",
@@ -58,7 +58,7 @@ export default async function Portfolio() {
         <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">Portfolio</p>
         <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Works</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-20">
-          A collection of resin art, oil pastel works, and acrylic paintings — each piece made slowly, with intention.
+          A collection of resin art, oil pastel works, and acrylic paintings: each piece made slowly, with intention.
         </p>
 
         {/* Top-level category cards */}

@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const art = await getArtwork(id);
   if (!art) return {};
 
-  const description = art.description || `${art.medium || art.category} — ₹${art.price?.toLocaleString()}, ${art.availability}.`;
+  const description = art.description || `${art.medium || art.category}, ₹${art.price?.toLocaleString()}, ${art.availability}.`;
   const image = art.image_url;
   return {
     title: art.title,
@@ -47,7 +47,7 @@ export default async function ArtworkDetail({ params }: { params: Promise<{ id: 
   if (!art) notFound();
 
   const allImages: string[] = [art.image_url, ...(art.images || [])].filter(Boolean);
-  const wa = `https://wa.me/919392640611?text=Hi! I'm interested in "${art.title}" — could you share more details?`;
+  const wa = `https://wa.me/919392640611?text=Hi! I'm interested in "${art.title}". Could you share more details?`;
   const ig = "https://instagram.com/AanyaByHiranya";
 
   return (

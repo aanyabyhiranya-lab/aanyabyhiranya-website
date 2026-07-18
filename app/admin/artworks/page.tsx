@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { adminFetch } from "@/lib/admin-fetch";
 import Image from "next/image";
 
-const EMPTY = { title:"", category:"Resin — Artifacts", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false };
+const EMPTY = { title:"", category:"Resin / Artifacts", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false };
 
 export default function AdminArtworks() {
   const router = useRouter();
@@ -109,9 +109,9 @@ export default function AdminArtworks() {
               <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}
                 className="w-full bg-beige dark:bg-dark border-b border-forest/30 dark:border-beige/30 py-2 text-dark dark:text-beige focus:outline-none text-sm">
                 <optgroup label="Resin Art">
-                  <option value="Resin — Artifacts">Resin — Artifacts</option>
-                  <option value="Resin — Jewellery — Flower">Resin — Jewellery — Flower</option>
-                  <option value="Resin — Jewellery — Pearl">Resin — Jewellery — Pearl</option>
+                  <option value="Resin / Artifacts">Resin / Artifacts</option>
+                  <option value="Resin / Jewellery / Flower">Resin / Jewellery / Flower</option>
+                  <option value="Resin / Jewellery / Pearl">Resin / Jewellery / Pearl</option>
                 </optgroup>
                 <optgroup label="Other">
                   <option value="Oil Pastels">Oil Pastels</option>
@@ -188,7 +188,7 @@ export default function AdminArtworks() {
           </div>
         </form>
 
-        {["Resin — Artifacts","Resin — Jewellery — Flower","Resin — Jewellery — Pearl","Oil Pastels","Acrylic Art"].map(cat => {
+        {["Resin / Artifacts","Resin / Jewellery / Flower","Resin / Jewellery / Pearl","Oil Pastels","Acrylic Art"].map(cat => {
           const pieces = artworks.filter(a => a.category === cat);
           if (!pieces.length) return null;
           return (
