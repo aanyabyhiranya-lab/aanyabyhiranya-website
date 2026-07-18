@@ -43,7 +43,7 @@ export default async function PaintingsPage() {
         {oilPastels.length > 0 && (
           <section className="mb-24">
             <div className="border-t border-forest/20 dark:border-beige/20 pt-10 mb-12">
-              <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2">Oil Pastels</h2>
+              <h2 className="font-script text-3xl md:text-4xl text-forest dark:text-beige mb-2">Oil Pastels</h2>
               <p className="text-sm text-dark/55 dark:text-beige/55">Expressive works on paper: rich texture and vivid colour.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">
@@ -60,7 +60,7 @@ export default async function PaintingsPage() {
         {acrylic.length > 0 && (
           <section>
             <div className="border-t border-forest/20 dark:border-beige/20 pt-10 mb-12">
-              <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2">Acrylic Art</h2>
+              <h2 className="font-script text-3xl md:text-4xl text-forest dark:text-beige mb-2">Acrylic Art</h2>
               <p className="text-sm text-dark/55 dark:text-beige/55">Acrylic paintings on canvas: abstract, nature-influenced, deeply personal.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">

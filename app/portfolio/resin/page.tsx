@@ -47,7 +47,7 @@ export default async function ResinPage() {
               <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2">
                 {artifacts.length ? `${artifacts.length} piece${artifacts.length === 1 ? "" : "s"}` : "New"}
               </p>
-              <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
+              <h2 className="font-script text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
                 Artifacts
               </h2>
               <p className="text-sm text-dark/55 dark:text-beige/55 max-w-xs">
@@ -65,7 +65,7 @@ export default async function ResinPage() {
               <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2">
                 {jewellery.length ? `${jewellery.length} piece${jewellery.length === 1 ? "" : "s"}` : "New"}
               </p>
-              <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
+              <h2 className="font-script text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
                 Jewellery
               </h2>
               <p className="text-sm text-dark/55 dark:text-beige/55 max-w-xs">

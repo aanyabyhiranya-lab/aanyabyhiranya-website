@@ -81,7 +81,7 @@ export default async function Portfolio() {
               </div>
 
               <div className="relative z-10">
-                <h2 className={`font-serif text-4xl md:text-5xl mb-3 group-hover:translate-x-1 transition-transform duration-300 text-forest dark:text-beige`}>
+                <h2 className={`font-script text-4xl md:text-5xl mb-3 group-hover:translate-x-1 transition-transform duration-300 text-forest dark:text-beige`}>
                   {cat.label}
                 </h2>
                 <p className="text-sm text-dark/60 dark:text-beige/60 leading-relaxed mb-6 max-w-xs">
