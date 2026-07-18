@@ -10,15 +10,15 @@
   --color-teal:        #165A63;
   --color-dark:        #1C1C1A;
   --color-darksurface: #2E2E2A;
-  --font-family-serif: "Cormorant", Georgia, serif;
-  --font-family-sans:  "DM Sans", Inter, system-ui, sans-serif;
-  --font-family-script: "Yellowtail", cursive;
+  --font-serif:  "Cormorant", Georgia, serif;
+  --font-sans:   "DM Sans", Inter, system-ui, sans-serif;
+  --font-script: "Yellowtail", cursive;
 }
 
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: var(--font-family-sans);
+  font-family: var(--font-sans);
   background-color: var(--color-beige);
   color: var(--color-dark);
   -webkit-font-smoothing: antialiased;
@@ -31,7 +31,11 @@ body {
   color: var(--color-beige);
 }
 
-h1, h2, h3, h4 { font-family: var(--font-family-serif); }
+/* Default heading font — in the base layer so any element with an explicit
+   font-serif/font-script utility class correctly overrides this. */
+@layer base {
+  h1, h2, h3, h4 { font-family: var(--font-serif); }
+}
 
 /* ── Scroll reveal ─────────────────────────────────────────────────── */
 .reveal {
