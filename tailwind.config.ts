@@ -21,7 +21,7 @@ const config: Config = {
       fontFamily: {
         serif:  ["Cormorant", "Georgia", "serif"],
         sans:   ["DM Sans", "Inter", "system-ui", "sans-serif"],
-        script: ["Yellowtail", "cursive"],
+        script: ["Alex Brush", "cursive"],
       },
       letterSpacing: { widest: "0.2em" },
     },
