@@ -35,6 +35,9 @@ async function getArtworks() {
 
 export default async function Home() {
   const artworks = await getArtworks();
+  const heroImages = artworks
+    .filter((a: any) => a.show_in_hero && a.image_url)
+    .map((a: any) => a.image_url as string);
 
   return (
     <div className="bg-beige dark:bg-dark min-h-screen relative">
@@ -43,7 +46,7 @@ export default async function Home() {
       <ParticleField />
 
       {/* Hero */}
-      <HeroSection />
+      <HeroSection heroImages={heroImages} />
 
       {/* Works by category */}
       {CATEGORIES.map(cat => {

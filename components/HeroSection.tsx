@@ -54,7 +54,14 @@ const MIDDLE_SLOT_MOBILE = { src: "/art11.jpg", top: 30, left: 27, w: 46, h: 24,
 
 const ROW_OPACITY = [0.95, 0.72, 0.35];
 
-export default function HeroSection() {
+// Overlays real, admin-selected artwork photos onto the fixed layout slots above,
+// in order. Any slot beyond the number of real images supplied keeps its original
+// static fallback image, so the collage never looks sparse.
+function withRealImages<T extends { src: string }>(positions: T[], realImages: string[]): T[] {
+  return positions.map((pos, i) => (realImages[i] ? { ...pos, src: realImages[i] } : pos));
+}
+
+export default function HeroSection({ heroImages = [] }: { heroImages?: string[] }) {
   const wrapRef      = useRef<HTMLDivElement>(null);
   const stickyRef    = useRef<HTMLDivElement>(null);
   const heroRef      = useRef<HTMLDivElement>(null);
@@ -62,8 +69,13 @@ export default function HeroSection() {
   const middleRef    = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const activeCollage = isMobile ? COLLAGE_MOBILE : COLLAGE;
-  const activeMiddle  = isMobile ? MIDDLE_SLOT_MOBILE : MIDDLE_SLOT;
+  const desktopCollage = withRealImages(COLLAGE, heroImages);
+  const mobileCollage  = withRealImages(COLLAGE_MOBILE, heroImages);
+  const desktopMiddle  = heroImages[0] ? { ...MIDDLE_SLOT, src: heroImages[0] } : MIDDLE_SLOT;
+  const mobileMiddle   = heroImages[0] ? { ...MIDDLE_SLOT_MOBILE, src: heroImages[0] } : MIDDLE_SLOT_MOBILE;
+
+  const activeCollage = isMobile ? mobileCollage : desktopCollage;
+  const activeMiddle  = isMobile ? mobileMiddle : desktopMiddle;
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -105,7 +117,7 @@ export default function HeroSection() {
         collageRef.current!.querySelectorAll<HTMLElement>(".cc"),
         { opacity: 0, y: 22 },
         {
-          opacity: (i: number) => ROW_OPACITY[COLLAGE[i].row],
+          opacity: (i: number) => ROW_OPACITY[activeCollage[i].row],
           y: 0,
           stagger: 0.025,
           ease: "power2.out",
@@ -124,7 +136,7 @@ export default function HeroSection() {
     });
 
     return () => ctx.revert();
-  }, []);
+  }, [isMobile]);
 
   return (
     <div ref={wrapRef} style={{ height: "300vh" }}>
@@ -136,7 +148,7 @@ export default function HeroSection() {
 
         {/* Collage — left + right clusters */}
         <div ref={collageRef} className="absolute inset-0 z-10">
-          {COLLAGE.map((c, i) => (
+          {activeCollage.map((c, i) => (
             <div key={i} className="cc absolute overflow-hidden rounded-xl"
               style={{
                 top:    `${c.top}%`,
@@ -179,17 +191,17 @@ export default function HeroSection() {
         <div ref={middleRef}
           className="absolute overflow-hidden rounded-xl z-15"
           style={{
-            top:    `${MIDDLE_SLOT.top}%`,
-            left:   `${MIDDLE_SLOT.left}%`,
-            width:  `${MIDDLE_SLOT.w}vw`,
-            height: `${MIDDLE_SLOT.h}vh`,
+            top:    `${activeMiddle.top}%`,
+            left:   `${activeMiddle.left}%`,
+            width:  `${activeMiddle.w}vw`,
+            height: `${activeMiddle.h}vh`,
             opacity: 0,
             willChange: "transform, opacity",
             zIndex: 15,
             boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
           }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={MIDDLE_SLOT.src} alt="" className="w-full h-full object-cover"
+          <img src={activeMiddle.src} alt="" className="w-full h-full object-cover"
             draggable={false} />
         </div>
 

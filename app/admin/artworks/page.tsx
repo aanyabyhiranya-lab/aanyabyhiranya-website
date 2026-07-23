@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { adminFetch } from "@/lib/admin-fetch";
 import Image from "next/image";
 
-const EMPTY = { title:"", category:"Resin / Artifacts", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false };
+const EMPTY = { title:"", category:"Resin / Artifacts", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false, show_in_hero:false };
 
 export default function AdminArtworks() {
   const router = useRouter();
@@ -175,6 +175,10 @@ export default function AdminArtworks() {
             <input type="checkbox" id="featured" checked={form.featured} onChange={e=>setForm({...form,featured:e.target.checked})} />
             <label htmlFor="featured" className="text-sm text-dark/70 dark:text-beige/70">Mark as Featured (shows on homepage)</label>
           </div>
+          <div className="mt-3 flex items-center gap-3">
+            <input type="checkbox" id="show_in_hero" checked={form.show_in_hero} onChange={e=>setForm({...form,show_in_hero:e.target.checked})} />
+            <label htmlFor="show_in_hero" className="text-sm text-dark/70 dark:text-beige/70">Use this image in the homepage hero collage</label>
+          </div>
           {msg && <p className="mt-4 text-sm text-forest dark:text-rose">{msg}</p>}
           <div className="mt-6 flex gap-4">
             <button type="submit" disabled={loading || uploading}
@@ -205,7 +209,10 @@ export default function AdminArtworks() {
                       <p className="font-serif text-lg text-dark dark:text-beige truncate">{art.title}</p>
                       <p className="text-sm text-forest dark:text-rose mt-1">₹{art.price?.toLocaleString()} · {art.availability}</p>
                       <p className="text-xs text-dark/40 dark:text-beige/40 mt-1">{(art.images||[]).length + 1} image{((art.images||[]).length + 1) !== 1 ? "s" : ""}</p>
-                      {art.featured && <span className="text-xs bg-rose/20 text-rose px-2 py-0.5 mt-1 inline-block">Featured</span>}
+                      <div className="flex gap-2 mt-1">
+                        {art.featured && <span className="text-xs bg-rose/20 text-rose px-2 py-0.5 inline-block">Featured</span>}
+                        {art.show_in_hero && <span className="text-xs bg-forest/20 text-forest dark:text-beige px-2 py-0.5 inline-block">In Hero</span>}
+                      </div>
                     </div>
                     <div className="flex flex-col gap-2 flex-shrink-0">
                       <button onClick={()=>edit(art)} className="text-xs tracking-widest uppercase text-dark/50 dark:text-beige/50 hover:text-forest dark:hover:text-rose transition-colors">Edit</button>

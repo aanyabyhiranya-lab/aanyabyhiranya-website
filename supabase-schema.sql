@@ -10,6 +10,7 @@ create table artworks (
   description text,
   image_url text,
   featured boolean default false,
+  show_in_hero boolean default false,
   created_at timestamptz default now()
 );
 
