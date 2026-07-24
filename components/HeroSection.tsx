@@ -5,7 +5,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Hero lands top-center (left 38%, top 2%, w ~24vw)
+// Hero lands top-center (left 38%, top 2%, w ~24vw). The full rectangular hero
+// image shrinks and fades out here, then a separate circular badge (a dedicated
+// pre-cropped circular logo, not the same rectangular image forced into a circle)
+// fades in at the same spot — CSS can't turn a wide rectangle into a true circle
+// without squishing it, so this crossfades between two purpose-made assets instead.
 const HERO_LAND = { cx: 50, cy: 14, scale: 0.24 }; // cx/cy = % of screen
 
 // Collage layout uses CSS Grid with explicit column/row spans instead of hand-tuned
@@ -71,6 +75,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   const wrapRef      = useRef<HTMLDivElement>(null);
   const stickyRef    = useRef<HTMLDivElement>(null);
   const heroRef      = useRef<HTMLDivElement>(null);
+  const circleRef    = useRef<HTMLDivElement>(null);
   const collageRef   = useRef<HTMLDivElement>(null);
   const middleRef    = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -113,16 +118,27 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
         },
       });
 
-      // Phase 1: hero shrinks to top-center
+      // Phase 1: hero shrinks + moves to top-center, then fades out as the
+      // circular badge crossfades in at the exact same landed spot.
       tl.to(heroRef.current, {
         scale: HERO_LAND.scale,
         x: targetX,
         y: targetY,
-        borderRadius: "14px",
-        boxShadow: "0 16px 48px rgba(0,0,0,0.32)",
         ease: "power2.inOut",
         duration: 0.6,
       }, 0);
+
+      tl.to(heroRef.current, {
+        opacity: 0,
+        ease: "power1.in",
+        duration: 0.18,
+      }, 0.42);
+
+      tl.fromTo(circleRef.current,
+        { opacity: 0, scale: 0.85, xPercent: -50, yPercent: -50 },
+        { opacity: 1, scale: 1, xPercent: -50, yPercent: -50, ease: "power2.out", duration: 0.28 },
+        0.48
+      );
 
       // Phase 2: collage fades in staggered (page-shift feel)
       tl.fromTo(
@@ -219,13 +235,34 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           </div>
         </div>
 
-        {/* Hero image — full screen, shrinks to top-center */}
+        {/* Hero image — full screen, shrinks to top-center, then fades out */}
         <div ref={heroRef}
           className="absolute inset-0 z-20 overflow-hidden"
-          style={{ transformOrigin: "center center", willChange: "transform, border-radius, box-shadow" }}>
+          style={{ transformOrigin: "center center", willChange: "transform, opacity" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/hero.png" alt="AanyaByHiranya"
             className="w-full h-full object-cover" />
+        </div>
+
+        {/* Circular badge — a dedicated pre-cropped circular logo (not the same
+            rectangular hero image forced into a circle, which would need squishing
+            or an unpredictable crop), crossfaded in at the same landed spot. */}
+        <div ref={circleRef}
+          className="absolute rounded-full overflow-hidden"
+          style={{
+            left: `${HERO_LAND.cx}%`,
+            top: `${HERO_LAND.cy}%`,
+            width: "clamp(96px, 14vw, 220px)",
+            height: "clamp(96px, 14vw, 220px)",
+            transformOrigin: "center center",
+            opacity: 0,
+            zIndex: 22,
+            willChange: "transform, opacity",
+            boxShadow: "0 12px 32px rgba(0,0,0,0.22)",
+          }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/hero-circle.png" alt="AanyaByHiranya"
+            className="w-full h-full object-cover" draggable={false} />
         </div>
 
         {/* Scroll hint */}
