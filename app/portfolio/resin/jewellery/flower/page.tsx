@@ -32,7 +32,7 @@ export default async function FlowerPage() {
           <span>/</span>
           <span className="text-forest dark:text-beige">Flower</span>
         </div>
-        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Flower Jewellery</h1>
+        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Flower Jewellery</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
           Pressed flowers preserved in resin: rings, pendants, earrings, and more. Each piece holds a real bloom, forever.
         </p>

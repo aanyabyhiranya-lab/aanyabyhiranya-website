@@ -35,7 +35,7 @@ export default async function ResinJewelleryPage() {
           <span className="text-forest dark:text-beige">Jewellery</span>
         </div>
 
-        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Jewellery</h1>
+        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Jewellery</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
           Delicate wearable pieces: pressed flowers and pearls preserved in resin, each one a small world held in your hands.
         </p>
@@ -46,7 +46,7 @@ export default async function ResinJewelleryPage() {
             className="group relative overflow-hidden aspect-[4/3] bg-forest/5 dark:bg-forest/10 border border-forest/15 dark:border-beige/10 hover:border-forest transition-all duration-300">
             <div className="absolute inset-0 flex flex-col justify-end p-8">
               <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2">{flower.length ? `${flower.length} piece${flower.length === 1 ? "" : "s"}` : "New"}</p>
-              <h2 className="font-script text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
+              <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
                 Flower
               </h2>
               <p className="text-sm text-dark/55 dark:text-beige/55 max-w-xs">
@@ -60,7 +60,7 @@ export default async function ResinJewelleryPage() {
             className="group relative overflow-hidden aspect-[4/3] bg-rose/5 dark:bg-rose/10 border border-rose/15 dark:border-beige/10 hover:border-rose transition-all duration-300">
             <div className="absolute inset-0 flex flex-col justify-end p-8">
               <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2">{pearl.length ? `${pearl.length} piece${pearl.length === 1 ? "" : "s"}` : "New"}</p>
-              <h2 className="font-script text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
+              <h2 className="font-serif text-3xl md:text-4xl text-forest dark:text-beige mb-2 group-hover:translate-x-1 transition-transform duration-300">
                 Pearl
               </h2>
               <p className="text-sm text-dark/55 dark:text-beige/55 max-w-xs">

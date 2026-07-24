@@ -43,7 +43,7 @@ export default function Nav() {
           <img src="/logo.png" alt="AanyaByHiranya"
             className="h-9 w-auto object-contain"
             onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-          <span className="font-script text-2xl md:text-3xl text-forest dark:text-beige">
+          <span className="font-serif text-lg md:text-xl tracking-wide text-forest dark:text-beige">
             AanyaByHiranya
           </span>
         </Link>

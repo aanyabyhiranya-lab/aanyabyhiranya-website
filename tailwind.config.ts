@@ -19,9 +19,8 @@ const config: Config = {
         darksurface: "#252520",
       },
       fontFamily: {
-        serif:  ["Cormorant", "Georgia", "serif"],
-        sans:   ["DM Sans", "Inter", "system-ui", "sans-serif"],
-        script: ["Alex Brush", "cursive"],
+        serif: ["Cormorant", "Georgia", "serif"],
+        sans:  ["DM Sans", "Inter", "system-ui", "sans-serif"],
       },
       letterSpacing: { widest: "0.2em" },
     },

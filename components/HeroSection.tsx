@@ -8,51 +8,57 @@ gsap.registerPlugin(ScrollTrigger);
 // Hero lands top-center (left 38%, top 2%, w ~24vw)
 const HERO_LAND = { cx: 50, cy: 14, scale: 0.24 }; // cx/cy = % of screen
 
-// Middle slot — centre gap
-const MIDDLE_SLOT = { src: "/art11.jpg", top: 28, left: 38, w: 22, h: 36, row: 1 };
+// Collage layout uses CSS Grid with explicit column/row spans instead of hand-tuned
+// vw/vh percentages. Grid cells structurally cannot overlap, and integer spans (1
+// for small tiles, 2 for big ones) give real size variation that holds up at any
+// viewport width — the old percentage-based version only looked right at the one
+// width it was tuned for, and drifted into overlaps or slivers everywhere else.
 
-// Desktop: wide 4-column layout — vw/vh tuned for screens with room to spread out.
+// Desktop: 8 columns x 5 rows. One big tile top-left with a small cluster beside
+// it, mirrored loosely on the right; columns 4-5 are left empty for the middle
+// centrepiece slot.
+const GRID_COLS = 8;
+const GRID_ROWS = 5;
+
+const MIDDLE_SLOT = { src: "/art11.jpg", col: 4, colSpan: 2, row: 2, rowSpan: 3, fade: 1 };
+
 const COLLAGE = [
-  // LEFT cluster — 2 columns, no overlaps
-  // col A: left 0, w 20 → ends 20
-  { src: "/art7.jpg",  top:  0, left:  0,  w: 20, h: 28, row: 0 },
-  { src: "/art9.jpg",  top: 30, left:  0,  w: 20, h: 28, row: 1 },
-  { src: "/art4.jpg",  top: 60, left:  0,  w: 20, h: 26, row: 1 },
-  // col B: left 22, w 14 → ends 36
-  { src: "/art13.jpg", top:  0, left: 22,  w: 14, h: 22, row: 0 },
-  { src: "/art2.jpg",  top: 24, left: 22,  w: 14, h: 24, row: 0 },
-  { src: "/art14.jpg", top: 50, left: 22,  w: 14, h: 26, row: 1 },
-  // RIGHT cluster — 2 columns, no overlaps
-  // col C: left 63, w 18 → ends 81
-  { src: "/art3.jpg",  top:  0, left: 63,  w: 18, h: 26, row: 0 },
-  { src: "/art8.jpg",  top: 28, left: 63,  w: 18, h: 26, row: 1 },
-  { src: "/art10.jpg", top: 56, left: 63,  w: 18, h: 26, row: 1 },
-  // col D: left 83, w 16 → ends 99
-  { src: "/art6.jpg",  top:  0, left: 83,  w: 16, h: 22, row: 0 },
-  { src: "/art12.jpg", top: 24, left: 83,  w: 16, h: 24, row: 0 },
-  { src: "/art1.jpg",  top: 50, left: 83,  w: 16, h: 26, row: 1 },
-  { src: "/art5.jpg",  top: 78, left: 63,  w: 16, h: 20, row: 2 },
+  // Left: big tile + cluster of 4 smaller ones
+  { src: "/art7.jpg",  col: 1, colSpan: 2, row: 1, rowSpan: 2, fade: 0 },
+  { src: "/art13.jpg", col: 3, colSpan: 1, row: 1, rowSpan: 1, fade: 0 },
+  { src: "/art2.jpg",  col: 3, colSpan: 1, row: 2, rowSpan: 1, fade: 0 },
+  { src: "/art9.jpg",  col: 1, colSpan: 1, row: 3, rowSpan: 1, fade: 1 },
+  { src: "/art4.jpg",  col: 2, colSpan: 1, row: 3, rowSpan: 1, fade: 1 },
+  { src: "/art14.jpg", col: 3, colSpan: 1, row: 3, rowSpan: 2, fade: 1 },
+  { src: "/art6.jpg",  col: 1, colSpan: 1, row: 4, rowSpan: 2, fade: 2 },
+  { src: "/art12.jpg", col: 2, colSpan: 1, row: 4, rowSpan: 1, fade: 2 },
+  // Right: big tile + smaller cluster, mirrored
+  { src: "/art3.jpg",  col: 7, colSpan: 2, row: 1, rowSpan: 2, fade: 0 },
+  { src: "/art8.jpg",  col: 6, colSpan: 1, row: 1, rowSpan: 1, fade: 0 },
+  { src: "/art10.jpg", col: 6, colSpan: 1, row: 2, rowSpan: 1, fade: 0 },
+  { src: "/art1.jpg",  col: 6, colSpan: 1, row: 3, rowSpan: 1, fade: 1 },
+  { src: "/art5.jpg",  col: 7, colSpan: 2, row: 3, rowSpan: 2, fade: 1 },
 ];
 
-// Mobile: same tiles, but re-tuned for a ~390px-wide portrait screen. The desktop
-// widths above (14-20vw) combined with the same heights (22-28vh) produce tall,
-// narrow slivers on a phone — e.g. 14vw is ~55px wide but 24vh is still ~190px
-// tall, so object-cover crops away most of each painting. This uses a plain
-// 2-column grid with near-square tiles instead, so full compositions stay visible.
+// Mobile: 4 columns x 6 rows — one modestly bigger tile, rest a simple near-square
+// cluster. Simpler than desktop since a narrow screen has little room for drama.
+const GRID_COLS_MOBILE = 4;
+const GRID_ROWS_MOBILE = 6;
+
+const MIDDLE_SLOT_MOBILE = { src: "/art11.jpg", col: 1, colSpan: 4, row: 3, rowSpan: 2, fade: 1 };
+
 const COLLAGE_MOBILE = [
-  { src: "/art7.jpg",  top:  2, left:  4, w: 43, h: 20, row: 0 },
-  { src: "/art3.jpg",  top:  2, left: 53, w: 43, h: 20, row: 0 },
-  { src: "/art9.jpg",  top: 24, left:  4, w: 43, h: 20, row: 1 },
-  { src: "/art8.jpg",  top: 24, left: 53, w: 43, h: 20, row: 1 },
-  { src: "/art4.jpg",  top: 46, left:  4, w: 43, h: 20, row: 1 },
-  { src: "/art10.jpg", top: 46, left: 53, w: 43, h: 20, row: 1 },
-  { src: "/art13.jpg", top: 68, left:  4, w: 43, h: 18, row: 2 },
-  { src: "/art6.jpg",  top: 68, left: 53, w: 43, h: 18, row: 2 },
+  { src: "/art7.jpg",  col: 1, colSpan: 2, row: 1, rowSpan: 2, fade: 0 },
+  { src: "/art3.jpg",  col: 3, colSpan: 1, row: 1, rowSpan: 1, fade: 0 },
+  { src: "/art9.jpg",  col: 4, colSpan: 1, row: 1, rowSpan: 1, fade: 0 },
+  { src: "/art8.jpg",  col: 3, colSpan: 2, row: 2, rowSpan: 1, fade: 0 },
+  { src: "/art4.jpg",  col: 1, colSpan: 1, row: 5, rowSpan: 1, fade: 1 },
+  { src: "/art10.jpg", col: 2, colSpan: 1, row: 5, rowSpan: 1, fade: 1 },
+  { src: "/art13.jpg", col: 3, colSpan: 2, row: 5, rowSpan: 1, fade: 1 },
+  { src: "/art6.jpg",  col: 1, colSpan: 4, row: 6, rowSpan: 1, fade: 2 },
 ];
 
-const MIDDLE_SLOT_MOBILE = { src: "/art11.jpg", top: 30, left: 27, w: 46, h: 24, row: 1 };
-
-const ROW_OPACITY = [0.95, 0.72, 0.35];
+const FADE_OPACITY = [0.95, 0.72, 0.35];
 
 // Overlays real, admin-selected artwork photos onto the fixed layout slots above,
 // in order. Any slot beyond the number of real images supplied keeps its original
@@ -76,6 +82,12 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
   const activeCollage = isMobile ? mobileCollage : desktopCollage;
   const activeMiddle  = isMobile ? mobileMiddle : desktopMiddle;
+  const gridCols = isMobile ? GRID_COLS_MOBILE : GRID_COLS;
+  const gridRows = isMobile ? GRID_ROWS_MOBILE : GRID_ROWS;
+  const gridTemplate = {
+    gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+    gridTemplateRows: `repeat(${gridRows}, 1fr)`,
+  };
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -117,7 +129,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
         collageRef.current!.querySelectorAll<HTMLElement>(".cc"),
         { opacity: 0, y: 22 },
         {
-          opacity: (i: number) => ROW_OPACITY[activeCollage[i].row],
+          opacity: (i: number) => FADE_OPACITY[activeCollage[i].fade],
           y: 0,
           stagger: 0.025,
           ease: "power2.out",
@@ -146,31 +158,31 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
         {/* Page bg */}
         <div className="absolute inset-0 bg-beige dark:bg-dark" />
 
-        {/* Collage — left + right clusters */}
-        <div ref={collageRef} className="absolute inset-0 z-10">
+        {/* Collage — CSS Grid, so tiles structurally cannot overlap regardless of
+            viewport width, and integer spans give real big/small size variation. */}
+        <div ref={collageRef} className="absolute inset-0 z-10 grid gap-2 md:gap-3 p-2 md:p-3"
+          style={gridTemplate}>
           {activeCollage.map((c, i) => (
-            <div key={i} className="cc absolute overflow-hidden rounded-xl"
+            <div key={i} className="cc relative overflow-hidden rounded-xl"
               style={{
-                top:    `${c.top}%`,
-                left:   `${c.left}%`,
-                width:  `${c.w}vw`,
-                height: `${c.h}vh`,
+                gridColumn: `${c.col} / span ${c.colSpan}`,
+                gridRow: `${c.row} / span ${c.rowSpan}`,
                 opacity: 0,
                 willChange: "transform, opacity",
               }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={c.src} alt="" className="w-full h-full object-cover"
                 loading="lazy" draggable={false} />
-              {c.row >= 1 && (
+              {c.fade >= 1 && (
                 <div className="absolute inset-0 pointer-events-none" style={{
-                  background: c.row === 1
+                  background: c.fade === 1
                     ? "linear-gradient(to bottom, transparent 25%, rgba(239,231,218,0.5) 100%)"
                     : "linear-gradient(to bottom, transparent 5%, rgba(239,231,218,0.82) 100%)",
                 }} />
               )}
-              {c.row >= 1 && (
+              {c.fade >= 1 && (
                 <div className="absolute inset-0 pointer-events-none hidden dark:block" style={{
-                  background: c.row === 1
+                  background: c.fade === 1
                     ? "linear-gradient(to bottom, transparent 25%, rgba(28,28,26,0.5) 100%)"
                     : "linear-gradient(to bottom, transparent 5%, rgba(28,28,26,0.82) 100%)",
                 }} />
@@ -187,22 +199,24 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           }} />
         </div>
 
-        {/* Middle centrepiece — different artwork in the gap */}
-        <div ref={middleRef}
-          className="absolute overflow-hidden rounded-xl z-15"
-          style={{
-            top:    `${activeMiddle.top}%`,
-            left:   `${activeMiddle.left}%`,
-            width:  `${activeMiddle.w}vw`,
-            height: `${activeMiddle.h}vh`,
-            opacity: 0,
-            willChange: "transform, opacity",
-            zIndex: 15,
-            boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
-          }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={activeMiddle.src} alt="" className="w-full h-full object-cover"
-            draggable={false} />
+        {/* Middle centrepiece — its own grid using the same template/gap/padding as
+            the collage above, so its slot lines up exactly with the reserved gap
+            instead of relying on a separately hand-computed pixel position. */}
+        <div className="absolute inset-0 grid gap-2 md:gap-3 p-2 md:p-3 pointer-events-none"
+          style={{ ...gridTemplate, zIndex: 15 }}>
+          <div ref={middleRef}
+            className="relative overflow-hidden rounded-xl pointer-events-auto"
+            style={{
+              gridColumn: `${activeMiddle.col} / span ${activeMiddle.colSpan}`,
+              gridRow: `${activeMiddle.row} / span ${activeMiddle.rowSpan}`,
+              opacity: 0,
+              willChange: "transform, opacity",
+              boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
+            }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={activeMiddle.src} alt="" className="w-full h-full object-cover"
+              draggable={false} />
+          </div>
         </div>
 
         {/* Hero image — full screen, shrinks to top-center */}

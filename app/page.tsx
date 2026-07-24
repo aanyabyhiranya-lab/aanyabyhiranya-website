@@ -61,7 +61,7 @@ export default async function Home() {
               <div>
                 <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2 reveal">Collection</p>
                 <TextReveal text={cat.label} tag="h2"
-                  className="font-script text-3xl md:text-4xl text-forest dark:text-beige" />
+                  className="font-serif text-3xl md:text-4xl text-forest dark:text-beige" />
               </div>
               <Link href={cat.href}
                 className="text-xs tracking-widest uppercase text-forest dark:text-rose underline-anim pb-1 hover:opacity-70 transition-opacity whitespace-nowrap reveal">
@@ -92,7 +92,7 @@ export default async function Home() {
           <div className="reveal-right">
             <p className="text-xs tracking-widest uppercase text-forest/50 dark:text-beige/40 mb-3">The Artist</p>
             <TextReveal text="Hi, I'm Hiranya." tag="h2"
-              className="font-script text-4xl md:text-5xl text-forest dark:text-beige mb-6 leading-tight" />
+              className="font-serif text-4xl md:text-5xl text-forest dark:text-beige mb-6 leading-tight" />
             <p className="text-dark/70 dark:text-beige/70 leading-relaxed mb-4">
               I&apos;m a multidisciplinary artist working across acrylic painting, pressed flower jewellery, resin experiments, and sustainable crafts.
             </p>
@@ -117,7 +117,7 @@ export default async function Home() {
         <div className="max-w-2xl mx-auto">
           <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-4 reveal">Bespoke Work</p>
           <TextReveal text="Request a Commission" tag="h2"
-            className="font-script text-4xl md:text-5xl text-forest dark:text-beige mb-6" />
+            className="font-serif text-4xl md:text-5xl text-forest dark:text-beige mb-6" />
           <p className="text-dark/60 dark:text-beige/60 mb-10 leading-relaxed reveal reveal-delay-2">
             Have something specific in mind? Hiranya takes on a limited number of commissions each season. Reach out to begin a conversation.
           </p>

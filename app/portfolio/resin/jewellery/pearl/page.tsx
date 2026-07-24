@@ -32,7 +32,7 @@ export default async function PearlPage() {
           <span>/</span>
           <span className="text-forest dark:text-beige">Pearl</span>
         </div>
-        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Pearl Jewellery</h1>
+        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Pearl Jewellery</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
           Pearl and resin combinations: elegant, minimal jewellery with a natural soul.
         </p>

@@ -30,7 +30,7 @@ export default async function ArtifactsPage() {
           <span>/</span>
           <span className="text-forest dark:text-beige">Artifacts</span>
         </div>
-        <h1 className="font-script text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Artifacts</h1>
+        <h1 className="font-serif text-5xl md:text-6xl text-forest dark:text-beige mb-4">Resin Artifacts</h1>
         <p className="text-dark/60 dark:text-beige/60 max-w-xl leading-relaxed mb-16">
           Decorative resin objects: vases, bowls, and sculptural pieces, each one made slowly with intention.
         </p>
