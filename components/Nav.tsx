@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { Sun, Moon, Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 const links = [
@@ -17,6 +17,8 @@ export default function Nav() {
   const { theme, toggle } = useTheme();
   const [open, setOpen]       = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
+  const lastY = useRef(0);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -25,11 +27,48 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // On pages with a pinned hero (home), the nav stays out of the way while
+  // scrolling down through it, reappears if you scroll back up towards the
+  // top, and becomes permanently visible once you've scrolled past it — same
+  // as it is everywhere else on the site.
+  useEffect(() => {
+    lastY.current = window.scrollY;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      const heroEl = document.querySelector<HTMLElement>("[data-hero-wrap]");
+
+      if (!heroEl) {
+        setNavHidden(false);
+        lastY.current = y;
+        return;
+      }
+
+      const heroBottom = heroEl.getBoundingClientRect().bottom + y;
+
+      if (y >= heroBottom - 40) {
+        setNavHidden(false); // clear of the hero — permanent from here on
+      } else if (y < 60) {
+        setNavHidden(false); // at the very top
+      } else if (y > lastY.current + 4) {
+        setNavHidden(true); // scrolling down through the hero
+      } else if (y < lastY.current - 4) {
+        setNavHidden(false); // scrolling back up towards the top
+      }
+      lastY.current = y;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [pathname]);
+
   // Close mobile menu on route change
   useEffect(() => { setOpen(false); }, [pathname]);
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
+      ${navHidden ? "translate-y-[-100%]" : "translate-y-0"}
       ${scrolled
         ? "bg-beige/98 dark:bg-dark/98 shadow-sm border-b border-forest/15 dark:border-beige/10"
         : "bg-beige/85 dark:bg-dark/85 border-b border-forest/10 dark:border-beige/10"}

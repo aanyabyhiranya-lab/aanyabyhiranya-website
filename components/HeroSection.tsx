@@ -10,7 +10,7 @@ gsap.registerPlugin(ScrollTrigger);
 // pre-cropped circular logo, not the same rectangular image forced into a circle)
 // fades in at the same spot — CSS can't turn a wide rectangle into a true circle
 // without squishing it, so this crossfades between two purpose-made assets instead.
-const HERO_LAND = { cx: 50, cy: 27, scale: 0.24 }; // cx/cy = % of screen; cy kept clear of the fixed nav bar
+const HERO_LAND = { cx: 50, cy: 14, scale: 0.24 }; // cx/cy = % of screen
 
 // Collage layout uses CSS Grid with explicit column/row spans instead of hand-tuned
 // vw/vh percentages. Grid cells structurally cannot overlap, and integer spans (1
@@ -113,13 +113,9 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      // Hero target: top-center. Clamp the landing Y so it never sits behind
-      // the fixed nav bar (64px) on short viewports — a pure vh-percentage
-      // lands too high once the badge's own radius eats into that headroom.
-      const halfBadge = Math.min(110, Math.max(48, 0.07 * vw));
-      const safeCenterY = Math.max((HERO_LAND.cy / 100) * vh, 64 + halfBadge + 16);
+      // Hero target: top-center
       const targetX = (HERO_LAND.cx / 100 - 0.5) * vw;
-      const targetY = safeCenterY - vh / 2;
+      const targetY = (HERO_LAND.cy / 100 - 0.5) * vh;
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -181,7 +177,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   }, [isMobile]);
 
   return (
-    <div ref={wrapRef} style={{ height: "300vh" }}>
+    <div ref={wrapRef} data-hero-wrap style={{ height: "300vh" }}>
       <div ref={stickyRef} className="w-full overflow-hidden"
         style={{ height: "100vh" }}>
 
@@ -265,7 +261,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           className="absolute rounded-full overflow-hidden"
           style={{
             left: `${HERO_LAND.cx}%`,
-            top: `max(${HERO_LAND.cy}%, calc(4rem + clamp(48px, 7vw, 110px) + 16px))`,
+            top: `${HERO_LAND.cy}%`,
             width: "clamp(96px, 14vw, 220px)",
             height: "clamp(96px, 14vw, 220px)",
             transformOrigin: "center center",
