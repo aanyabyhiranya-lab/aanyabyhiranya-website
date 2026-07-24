@@ -96,6 +96,16 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
+    let timer: ReturnType<typeof setTimeout>;
+    const check = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setIsMobile(window.innerWidth < 768), 150);
+    };
+    window.addEventListener("resize", check);
+    return () => {
+      window.removeEventListener("resize", check);
+      clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -103,9 +113,13 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      // Hero target: top-center
+      // Hero target: top-center. Clamp the landing Y so it never sits behind
+      // the fixed nav bar (64px) on short viewports — a pure vh-percentage
+      // lands too high once the badge's own radius eats into that headroom.
+      const halfBadge = Math.min(110, Math.max(48, 0.07 * vw));
+      const safeCenterY = Math.max((HERO_LAND.cy / 100) * vh, 64 + halfBadge + 16);
       const targetX = (HERO_LAND.cx / 100 - 0.5) * vw;
-      const targetY = (HERO_LAND.cy / 100 - 0.5) * vh;
+      const targetY = safeCenterY - vh / 2;
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -251,7 +265,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           className="absolute rounded-full overflow-hidden"
           style={{
             left: `${HERO_LAND.cx}%`,
-            top: `${HERO_LAND.cy}%`,
+            top: `max(${HERO_LAND.cy}%, calc(4rem + clamp(48px, 7vw, 110px) + 16px))`,
             width: "clamp(96px, 14vw, 220px)",
             height: "clamp(96px, 14vw, 220px)",
             transformOrigin: "center center",
