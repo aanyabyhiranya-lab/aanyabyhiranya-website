@@ -140,7 +140,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
   return (
     <div ref={wrapRef} style={{ height: "300vh" }}>
-      <div ref={stickyRef} className="sticky top-0 w-full overflow-hidden"
+      <div ref={stickyRef} className="w-full overflow-hidden"
         style={{ height: "100vh" }}>
 
         {/* Page bg */}
