@@ -10,7 +10,7 @@ gsap.registerPlugin(ScrollTrigger);
 // pre-cropped circular logo, not the same rectangular image forced into a circle)
 // fades in at the same spot — CSS can't turn a wide rectangle into a true circle
 // without squishing it, so this crossfades between two purpose-made assets instead.
-const HERO_LAND = { cx: 50, cy: 14, scale: 0.24 }; // cx/cy = % of screen
+const HERO_LAND = { cx: 50, cy: 27, scale: 0.24 }; // cx/cy = % of screen; cy kept clear of the fixed nav bar
 
 // Collage layout uses CSS Grid with explicit column/row spans instead of hand-tuned
 // vw/vh percentages. Grid cells structurally cannot overlap, and integer spans (1
