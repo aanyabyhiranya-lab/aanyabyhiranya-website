@@ -1,7 +1,7 @@
 export const revalidate = 60;
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
-import ArtCard from "./portfolio/ArtCard";
+import CategoryCarousel from "@/components/CategoryCarousel";
 import HeroSection from "@/components/HeroSection";
 import ParticleField from "@/components/ParticleField";
 import TextReveal from "@/components/TextReveal";
@@ -54,7 +54,7 @@ export default async function Home() {
           cat.key === "Resin"
             ? a.category?.startsWith("Resin")
             : ["Oil Pastels", "Acrylic Art"].includes(a.category)
-        ).slice(0, 3);
+        ).slice(0, 8);
         return (
           <section key={cat.key} className="py-20 px-6 md:px-16 max-w-7xl mx-auto relative z-10">
             <div className="flex items-end justify-between mb-12">
@@ -69,8 +69,8 @@ export default async function Home() {
               </Link>
             </div>
             {pieces.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16 stagger reveal">
-                {pieces.map((art: any) => <ArtCard key={art.id} art={art} />)}
+              <div className="reveal">
+                <CategoryCarousel pieces={pieces} />
               </div>
             ) : (
               <div className="border border-forest/10 dark:border-beige/10 py-16 text-center">

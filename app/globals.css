@@ -117,6 +117,10 @@ main { animation: fadeIn 0.6s cubic-bezier(0.16,1,0.3,1); }
 .stagger.visible > *:nth-child(5) { opacity:1; transform:translateY(0); transition-delay:0.45s; }
 .stagger.visible > *:nth-child(6) { opacity:1; transform:translateY(0); transition-delay:0.55s; }
 
+/* ── Hide scrollbar on horizontal carousels (scroll still works) ──── */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* ── Pulse dot (availability badge) ───────────────────────────────── */
 .pulse-dot {
   display: inline-block;
