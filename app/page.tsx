@@ -50,13 +50,18 @@ export default async function Home() {
       {/* Hero */}
       <HeroSection heroImages={heroImages} />
 
-      {/* Works by category */}
-      {homepageSections.map(node => {
+      {/* Works by category — a border-top on every section after the first keeps
+          each one reading as its own independent block. Without it, sections
+          with fewer/shared images than the one above (e.g. a subcategory like
+          Jewellery right after its parent Resin Art) look like a continuation
+          of the previous section rather than a separate collection. */}
+      {homepageSections.map((node, i) => {
         const ids = new Set(descendantIds(node));
         const pieces = artworks.filter((a: any) => a.category_id && ids.has(a.category_id)).slice(0, 8);
         const href = `/portfolio/${node.path.join("/")}`;
         return (
-          <section key={node.id} className="py-20 px-6 md:px-16 max-w-7xl mx-auto relative z-10">
+          <section key={node.id}
+            className={`py-20 px-6 md:px-16 max-w-7xl mx-auto relative z-10 ${i > 0 ? "border-t border-forest/15 dark:border-beige/10" : ""}`}>
             <div className="flex items-end justify-between mb-12">
               <div>
                 <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-2 reveal">Collection</p>
