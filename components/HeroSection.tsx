@@ -1,9 +1,29 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
+
+const QUOTES = [
+  "Ready to love?",
+  "Art for everyday.",
+  "Made to inspire.",
+  "Curated for you.",
+  "Crafted with soul.",
+  "Beauty in details.",
+  "A piece of history.",
+];
+
+function shuffled(arr: string[]): string[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 // Hero lands top-center as a single continuous shape morph: the same element
 // clip-paths itself down from the full rectangle to a centered square (via an
@@ -77,7 +97,17 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   const heroRef      = useRef<HTMLDivElement>(null);
   const collageRef   = useRef<HTMLDivElement>(null);
   const middleRef    = useRef<HTMLDivElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const quoteRef     = useRef<HTMLParagraphElement>(null);
+  const quoteIndexRef = useRef(0);
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
+  const [quotes, setQuotes] = useState(QUOTES);
+  const isMobile = viewport.w > 0 && viewport.w < 768;
+
+  // Different quote order each visit — shuffled post-mount (not during the
+  // initial render) so server and client agree on the first paint.
+  useEffect(() => {
+    setQuotes(shuffled(QUOTES));
+  }, []);
 
   const desktopCollage = withRealImages(COLLAGE, heroImages);
   const mobileCollage  = withRealImages(COLLAGE_MOBILE, heroImages);
@@ -93,24 +123,50 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
     gridTemplateRows: `repeat(${gridRows}, 1fr)`,
   };
 
+  // Tracks the REAL live viewport, not just the mobile/desktop breakpoint.
+  // Mobile browsers resize window.innerHeight as the address bar hides/shows
+  // while scrolling, so a value captured once at mount goes stale mid-scroll
+  // — that's what was producing a non-square (rounded-rectangle) crop and
+  // clipping into the logo on phones. Re-measuring on every real resize
+  // (including visualViewport, which fires for address-bar changes that
+  // `resize` sometimes misses) keeps the circle math honest.
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    let timer: ReturnType<typeof setTimeout>;
-    const check = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => setIsMobile(window.innerWidth < 768), 150);
+    const measure = () => {
+      setViewport(prev => {
+        const w = window.innerWidth, h = window.innerHeight;
+        return prev.w === w && prev.h === h ? prev : { w, h };
+      });
     };
-    window.addEventListener("resize", check);
+    measure();
+    let timer: ReturnType<typeof setTimeout>;
+    const onResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(measure, 150);
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
     return () => {
-      window.removeEventListener("resize", check);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
       clearTimeout(timer);
     };
   }, []);
 
   useEffect(() => {
+    if (!viewport.w || !viewport.h || !stickyRef.current) return;
     const ctx = gsap.context(() => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+      // Measure the sticky box itself rather than window.innerWidth/innerHeight.
+      // CSS `vh` (the 100vh/300vh in this component's own styles) resolves to
+      // the browser's LARGE viewport (chrome retracted), while JS innerHeight
+      // reflects whatever's visible right now — on mobile those two numbers
+      // genuinely disagree, and that mismatch (not just a stale read) is what
+      // made the crop non-square and clipped into the logo. Reading the real
+      // rendered box removes the mismatch entirely, on any browser.
+      const box = stickyRef.current!.getBoundingClientRect();
+      const vw = box.width;
+      const vh = box.height;
 
       // Hero target: top-center
       const targetX = (HERO_LAND.cx / 100 - 0.5) * vw;
@@ -133,6 +189,22 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           scrub: 1.2,
           pin: stickyRef.current,
           anticipatePin: 1,
+          onUpdate: self => {
+            // Cycles the quote text across the same scroll progress driving the
+            // rest of the hero, independent of the timeline's own tweened props.
+            const idx = Math.min(quotes.length - 1, Math.floor(self.progress * quotes.length));
+            if (idx === quoteIndexRef.current) return;
+            quoteIndexRef.current = idx;
+            const el = quoteRef.current;
+            if (!el) return;
+            gsap.to(el, {
+              opacity: 0, y: -6, duration: 0.15, ease: "power1.in",
+              onComplete: () => {
+                el.textContent = quotes[idx];
+                gsap.to(el, { opacity: 1, y: 0, duration: 0.25, ease: "power1.out" });
+              },
+            });
+          },
         },
       });
 
@@ -173,7 +245,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
     });
 
     return () => ctx.revert();
-  }, [isMobile]);
+  }, [viewport.w, viewport.h, quotes]);
 
   return (
     <div ref={wrapRef} data-hero-wrap style={{ height: "300vh" }}>
@@ -258,6 +330,21 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/hero.png" alt="AanyaByHiranya"
             className="w-full h-full object-cover" />
+        </div>
+
+        {/* Rotating quote + Discover CTA — a sibling of the hero image, not a
+            child, so it's unaffected by the hero's own shrink/clip-path morph
+            and stays full-size and legible for the whole pinned scroll. It
+            leaves the screen only because it scrolls away with the rest of
+            the sticky section once the pin releases past the hero. */}
+        <div className="absolute inset-x-0 bottom-20 md:bottom-24 flex flex-col items-center gap-5 px-6 text-center" style={{ zIndex: 25 }}>
+          <p ref={quoteRef} className="font-serif text-2xl md:text-4xl text-forest dark:text-beige">
+            {quotes[0]}
+          </p>
+          <Link href="/portfolio"
+            className="text-[11px] tracking-[0.2em] uppercase text-forest dark:text-beige border-b border-forest/40 dark:border-beige/40 pb-1 hover:opacity-70 transition-opacity">
+            Discover
+          </Link>
         </div>
 
         {/* Scroll hint */}
