@@ -10,11 +10,11 @@ export default function CategoryCarousel({ pieces }: { pieces: any[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
 
-  // A category with only a few pieces doesn't fill one screen width, so there's
-  // nothing to actually scroll to — showing arrows anyway made those sections
-  // look broken/incomplete next to a fuller one. Only show them, and only let
-  // the row hug the left edge, when there's real overflow; otherwise center
-  // the pieces so a short row reads as intentionally curated, not sparse.
+  // A category with only a few pieces doesn't fill one screen width, so
+  // there's nothing to actually scroll to — showing arrows anyway made those
+  // sections look broken. Every row still starts flush left (so the first
+  // card lines up in the same spot section to section, matching whichever
+  // row has the most items), just without arrows when there's nowhere to go.
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -35,7 +35,7 @@ export default function CategoryCarousel({ pieces }: { pieces: any[] }) {
   return (
     <div>
       <div ref={scrollerRef}
-        className={`flex gap-6 md:gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth -mx-6 px-6 md:-mx-16 md:px-16 ${hasOverflow ? "" : "justify-center"}`}>
+        className="flex gap-6 md:gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth -mx-6 px-6 md:-mx-16 md:px-16">
         {pieces.map((art) => (
           <div key={art.id} className="shrink-0 snap-start w-[75%] sm:w-[46%] md:w-[31%] lg:w-[23%]">
             <ArtCard art={art} />
