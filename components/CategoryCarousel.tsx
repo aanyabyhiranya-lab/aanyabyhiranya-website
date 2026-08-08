@@ -34,8 +34,15 @@ export default function CategoryCarousel({ pieces }: { pieces: any[] }) {
 
   return (
     <div>
+      {/* scroll-pl-* must match the px-* padding. The negative margin + padding
+          is a full-bleed trick so cards can scroll past the section's gutter,
+          but snap-start alone snaps a card to the scroller's OUTER edge, so
+          the browser auto-scrolls the row left to satisfy snap-mandatory —
+          pulling the first card out of line with the heading by up to the
+          padding width, and worst on the row with the most overflow to scroll
+          into. scroll-padding-left moves the snap line to the padding edge. */}
       <div ref={scrollerRef}
-        className="flex gap-6 md:gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth -mx-6 px-6 md:-mx-16 md:px-16">
+        className="flex gap-6 md:gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth -mx-6 px-6 scroll-pl-6 md:-mx-16 md:px-16 md:scroll-pl-16">
         {pieces.map((art) => (
           <div key={art.id} className="shrink-0 snap-start w-[75%] sm:w-[46%] md:w-[31%] lg:w-[23%]">
             <ArtCard art={art} />
