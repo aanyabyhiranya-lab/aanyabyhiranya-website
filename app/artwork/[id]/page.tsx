@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { getCategoryTree, flatten } from "@/lib/categories";
 import ArtworkGallery from "@/app/artwork/[id]/ArtworkGallery";
 
 const PLACEHOLDER: any[] = [
@@ -25,12 +26,22 @@ const getArtwork = cache(async (id: string) => {
   return PLACEHOLDER.find(p => p.id === id) ?? null;
 });
 
+// New rows carry category_id (the admin-managed category tree); the legacy
+// free-text `category` column only still has data on rows from before that
+// migration, so it's the fallback, not the source of truth.
+async function getCategoryName(art: any): Promise<string> {
+  if (!art.category_id) return art.category || "";
+  const tree = await getCategoryTree();
+  return flatten(tree).find(n => n.id === art.category_id)?.name || art.category || "";
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const art = await getArtwork(id);
   if (!art) return {};
 
-  const description = art.description || `${art.medium || art.category}, ₹${art.price?.toLocaleString()}, ${art.availability}.`;
+  const categoryName = await getCategoryName(art);
+  const description = art.description || `${art.medium || categoryName}, ₹${art.price?.toLocaleString()}, ${art.availability}.`;
   const image = art.image_url;
   return {
     title: art.title,
@@ -46,6 +57,7 @@ export default async function ArtworkDetail({ params }: { params: Promise<{ id: 
 
   if (!art) notFound();
 
+  const categoryName = await getCategoryName(art);
   const allImages: string[] = [art.image_url, ...(art.images || [])].filter(Boolean);
   const wa = `https://wa.me/919392640611?text=Hi! I'm interested in "${art.title}". Could you share more details?`;
   const ig = "https://instagram.com/AanyaByHiranya";
@@ -61,7 +73,7 @@ export default async function ArtworkDetail({ params }: { params: Promise<{ id: 
           <ArtworkGallery images={allImages} title={art.title} />
 
           <div className="md:sticky md:top-24">
-            <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">{art.category}</p>
+            <p className="text-xs tracking-widest uppercase text-dark/40 dark:text-beige/40 mb-3">{categoryName}</p>
             <h1 className="font-serif text-4xl md:text-5xl text-forest dark:text-beige mb-4">{art.title}</h1>
             {art.medium && <p className="text-sm text-dark/60 dark:text-beige/60 mb-6">{art.medium}</p>}
             <p className="font-serif text-3xl text-forest dark:text-rose mb-6">₹{art.price?.toLocaleString()}</p>

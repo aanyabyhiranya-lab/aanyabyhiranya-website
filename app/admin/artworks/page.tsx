@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminFetch } from "@/lib/admin-fetch";
 import Image from "next/image";
+import { buildTree, flatten, UNCATEGORIZED_ID, type Category, type CategoryNode } from "@/lib/categories";
 
-const EMPTY = { title:"", category:"Resin / Artifacts", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false, show_in_hero:false };
+const EMPTY = { title:"", category_id:"", medium:"", price:"", availability:"Available", description:"", image_url:"", images:[] as string[], featured:false, show_in_hero:false };
 
 export default function AdminArtworks() {
   const router = useRouter();
   const [artworks, setArtworks] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState<any>(EMPTY);
   const [editing, setEditing] = useState<string|null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,6 +22,7 @@ export default function AdminArtworks() {
 
   useEffect(() => {
     load();
+    loadCategories();
   }, []);
 
   const load = async () => {
@@ -27,6 +30,24 @@ export default function AdminArtworks() {
     const { data } = await res.json();
     setArtworks(data || []);
   };
+
+  const loadCategories = async () => {
+    const res = await adminFetch("/api/admin/categories");
+    const { data } = await res.json();
+    setCategories(data || []);
+  };
+
+  const categoryTree = buildTree(categories.filter(c => c.id !== UNCATEGORIZED_ID));
+  const categoryOptions: { id: string; label: string }[] = [];
+  const walkCategoryOptions = (nodes: CategoryNode[], depth: number) => {
+    nodes.forEach(n => {
+      categoryOptions.push({ id: n.id, label: `${"— ".repeat(depth)}${n.name}` });
+      walkCategoryOptions(n.children, depth + 1);
+    });
+  };
+  walkCategoryOptions(categoryTree, 0);
+  const categoryById = new Map(categories.map(c => [c.id, c]));
+  const groupedNodes = flatten(categoryTree);
 
   const uploadImage = async (file: File): Promise<string> => {
     const fd = new FormData();
@@ -106,17 +127,10 @@ export default function AdminArtworks() {
             ))}
             <div>
               <label className="text-xs tracking-widest uppercase text-dark/50 dark:text-beige/50 block mb-1">Category</label>
-              <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}
+              <select value={form.category_id} onChange={e=>setForm({...form,category_id:e.target.value})} required
                 className="w-full bg-beige dark:bg-dark border-b border-forest/30 dark:border-beige/30 py-2 text-dark dark:text-beige focus:outline-none text-sm">
-                <optgroup label="Resin Art">
-                  <option value="Resin / Artifacts">Resin / Artifacts</option>
-                  <option value="Resin / Jewellery / Flower">Resin / Jewellery / Flower</option>
-                  <option value="Resin / Jewellery / Pearl">Resin / Jewellery / Pearl</option>
-                </optgroup>
-                <optgroup label="Other">
-                  <option value="Oil Pastels">Oil Pastels</option>
-                  <option value="Acrylic Art">Acrylic Art</option>
-                </optgroup>
+                <option value="" disabled>Choose a category…</option>
+                {categoryOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
             </div>
             <div>
@@ -192,13 +206,13 @@ export default function AdminArtworks() {
           </div>
         </form>
 
-        {["Resin / Artifacts","Resin / Jewellery / Flower","Resin / Jewellery / Pearl","Oil Pastels","Acrylic Art"].map(cat => {
-          const pieces = artworks.filter(a => a.category === cat);
+        {[...groupedNodes, categoryById.get(UNCATEGORIZED_ID)].filter((n): n is Category | CategoryNode => !!n).map(cat => {
+          const pieces = artworks.filter(a => a.category_id === cat.id);
           if (!pieces.length) return null;
           return (
-            <div key={cat} className="mb-12">
+            <div key={cat.id} className="mb-12">
               <div className="flex items-center gap-3 mb-4">
-                <p className="font-serif text-2xl text-forest dark:text-beige">{cat}</p>
+                <p className="font-serif text-2xl text-forest dark:text-beige">{cat.name}</p>
                 <span className="text-xs text-dark/40 dark:text-beige/40">{pieces.length} item{pieces.length !== 1 ? "s" : ""}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
