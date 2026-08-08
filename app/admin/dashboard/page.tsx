@@ -23,7 +23,9 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { href:"/admin/artworks", label:"Artworks", desc:"Add, edit, or remove artworks from your portfolio.", icon:"🖼" },
+            { href:"/admin/categories", label:"Categories", desc:"Organize your main categories, subcategories, and what shows on the homepage.", icon:"🗂" },
             { href:"/admin/blog", label:"Blog Posts", desc:"Write and publish journal entries.", icon:"✍️" },
+            { href:"/admin/workshops", label:"Workshops", desc:"Add workshops with images, an Instagram Reel, or a video.", icon:"🎨" },
             { href:"/admin/orders", label:"Orders", desc:"View and manage incoming orders.", icon:"📦" },
           ].map(item => (
             <Link key={item.href} href={item.href}
