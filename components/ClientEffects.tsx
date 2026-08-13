@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -7,27 +7,100 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ClientEffects() {
-  const dotRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    // ── Lenis smooth scroll ──────────────────────────────────────
-    const lenis = new Lenis({
-      duration: 1.4,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    lenis.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
-    gsap.ticker.lagSmoothing(0);
+    // Teardown for things gsap's context doesn't own (Lenis, the ticker hook).
+    const cleanups: Array<() => void> = [];
 
-    // ── Cursor dot only ──────────────────────────────────────────
-    const dot = dotRef.current;
-    const moveCursor = (e: MouseEvent) => {
-      if (!dot) return;
-      dot.style.left = `${e.clientX - 3}px`;
-      dot.style.top  = `${e.clientY - 3}px`;
-    };
-    window.addEventListener("mousemove", moveCursor);
+    // Everything gsap creates here is registered to this context, so cleanup
+    // reverts exactly what this component made. (It used to call
+    // ScrollTrigger.getAll().kill(), which also destroyed triggers belonging to
+    // other components — notably the hero's pinned scroll timeline.)
+    const ctx = gsap.context(() => {
+
+      // ── Lenis smooth scroll — pointer-capable devices only ──────
+      // Touch devices already have smooth, hardware-accelerated momentum
+      // scrolling. Running Lenis on top of it means JS re-driving the scroll
+      // position every frame while native momentum is also running, and it
+      // fights the pinned/scrubbed hero timeline — which reads as stutter.
+      // Lenis exists to smooth mouse-wheel input, so gate it on that.
+      const wantsSmoothScroll =
+        typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
+
+      if (wantsSmoothScroll) {
+        const lenis = new Lenis({
+          duration: 1.4,
+          easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+        });
+        lenis.on("scroll", ScrollTrigger.update);
+
+        // Keep the exact reference — the old code passed a fresh arrow function
+        // to ticker.remove(), which never matches what was added, so the
+        // callback (and a destroyed Lenis instance) leaked on every remount.
+        const raf = (time: number) => lenis.raf(time * 1000);
+        gsap.ticker.add(raf);
+        // Only meaningful while Lenis drives scrolling; left on globally it
+        // removes GSAP's protection against frame-time spikes elsewhere.
+        gsap.ticker.lagSmoothing(0);
+
+        cleanups.push(() => {
+          gsap.ticker.remove(raf);
+          gsap.ticker.lagSmoothing(500, 33); // restore GSAP's default
+          lenis.destroy();
+        });
+      }
+
+      // ── Section divider lines draw in ───────────────────────────
+      document.querySelectorAll<HTMLElement>(".line-draw").forEach(el => {
+        gsap.fromTo(el,
+          { scaleX: 0, transformOrigin: "left center" },
+          {
+            scaleX: 1,
+            duration: 1.2,
+            ease: "power3.out",
+            scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none none" },
+          }
+        );
+      });
+
+      // ── Image scale-in on scroll ─────────────────────────────────
+      document.querySelectorAll<HTMLElement>(".img-reveal").forEach(el => {
+        gsap.fromTo(el,
+          { scale: 1.08, opacity: 0 },
+          {
+            scale: 1,
+            opacity: 1,
+            duration: 1.1,
+            ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none none" },
+          }
+        );
+      });
+
+      // ── Stat counters animate up ─────────────────────────────────
+      document.querySelectorAll<HTMLElement>(".count-up").forEach(el => {
+        const target = parseFloat(el.dataset.target || "0");
+        const isInt  = Number.isInteger(target);
+        ScrollTrigger.create({
+          trigger: el,
+          start: "top 85%",
+          once: true,
+          onEnter: () => {
+            gsap.fromTo({ val: 0 }, { val: target },
+              {
+                duration: 1.8,
+                ease: "power2.out",
+                onUpdate: function() {
+                  el.textContent = isInt
+                    ? Math.round(this.targets()[0].val).toString()
+                    : this.targets()[0].val.toFixed(1);
+                },
+              }
+            );
+          },
+        });
+      });
+    });
 
     // ── Scroll reveal ────────────────────────────────────────────
     const observer = new IntersectionObserver(
@@ -36,57 +109,6 @@ export default function ClientEffects() {
     );
     document.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger")
       .forEach(el => observer.observe(el));
-
-    // ── Section divider lines draw in ───────────────────────────
-    document.querySelectorAll<HTMLElement>(".line-draw").forEach(el => {
-      gsap.fromTo(el,
-        { scaleX: 0, transformOrigin: "left center" },
-        {
-          scaleX: 1,
-          duration: 1.2,
-          ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none none" },
-        }
-      );
-    });
-
-    // ── Image scale-in on scroll ─────────────────────────────────
-    document.querySelectorAll<HTMLElement>(".img-reveal").forEach(el => {
-      gsap.fromTo(el,
-        { scale: 1.08, opacity: 0 },
-        {
-          scale: 1,
-          opacity: 1,
-          duration: 1.1,
-          ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none none" },
-        }
-      );
-    });
-
-    // ── Stat counters animate up ─────────────────────────────────
-    document.querySelectorAll<HTMLElement>(".count-up").forEach(el => {
-      const target = parseFloat(el.dataset.target || "0");
-      const isInt  = Number.isInteger(target);
-      ScrollTrigger.create({
-        trigger: el,
-        start: "top 85%",
-        once: true,
-        onEnter: () => {
-          gsap.fromTo({ val: 0 }, { val: target },
-            {
-              duration: 1.8,
-              ease: "power2.out",
-              onUpdate: function() {
-                el.textContent = isInt
-                  ? Math.round(this.targets()[0].val).toString()
-                  : this.targets()[0].val.toFixed(1);
-              },
-            }
-          );
-        },
-      });
-    });
 
     // ── Artwork cards tilt on hover ──────────────────────────────
     const cards = document.querySelectorAll<HTMLElement>(".art-card-tilt");
@@ -105,13 +127,11 @@ export default function ClientEffects() {
       c.addEventListener("mouseleave", onCardLeave);
     });
 
-
     return () => {
-      lenis.destroy();
-      gsap.ticker.remove((time) => lenis.raf(time * 1000));
-      window.removeEventListener("mousemove", moveCursor);
+      cleanups.forEach(fn => fn());
+      cleanups.length = 0;
+      ctx.revert();
       observer.disconnect();
-      ScrollTrigger.getAll().forEach(t => t.kill());
       cards.forEach(c => {
         c.removeEventListener("mousemove",  onCardMove);
         c.removeEventListener("mouseleave", onCardLeave);
@@ -119,5 +139,9 @@ export default function ClientEffects() {
     };
   }, []);
 
-  return <div ref={dotRef} className="cursor-dot" aria-hidden />;
+  // No custom cursor here — components/CursorDot.tsx owns that, and it gates
+  // itself on `pointer: fine`. This component used to render a second, ungated
+  // cursor dot: on a touch device a tap fires one synthetic mousemove, which
+  // parked a green dot at the tap point with no further events to move it.
+  return null;
 }

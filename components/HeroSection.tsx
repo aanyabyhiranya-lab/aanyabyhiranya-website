@@ -325,11 +325,22 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             clipPath: "inset(0px 0px 0px 0px round 0px)",
             boxShadow: "0 0px 0px rgba(0,0,0,0)",
             zIndex: 22,
+            // Exactly hero.png's own background, so the area object-contain
+            // letterboxes is indistinguishable from the image itself.
+            backgroundColor: "#f7e9de",
             willChange: "transform, clip-path, box-shadow",
           }}>
+          {/* object-contain, not object-cover: hero.png is a square whose logo
+              is sized to fit the circular clip. Cover would scale it to fill
+              the viewport and crop the overflowing axis — on a tall phone that
+              meant cutting several hundred px off each side, straight through
+              the logo. Contain renders it at exactly min(vw,vh) centred, which
+              is the same box the clip-path targets, so the logo is never cut on
+              any screen shape. The image's own background (#f7e9de) matches the
+              page beige, so the letterboxed area is invisible. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/hero.png" alt="AanyaByHiranya"
-            className="w-full h-full object-cover" />
+            className="w-full h-full object-contain" />
         </div>
 
         {/* Rotating quote + Discover CTA — a sibling of the hero image, not a

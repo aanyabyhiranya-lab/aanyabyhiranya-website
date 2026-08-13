@@ -140,14 +140,6 @@ main { animation: fadeIn 0.6s cubic-bezier(0.16,1,0.3,1); }
   100% { transform: translateY(300%); }
 }
 
-/* ── Custom cursor ─────────────────────────────────────────────────── */
-.cursor-dot {
-  width: 6px; height: 6px;
-  background: var(--color-forest);
-  border-radius: 50%;
-  position: fixed;
-  pointer-events: none;
-  z-index: 9999;
-  transition: transform 0.1s;
-}
-.dark .cursor-dot { background: var(--color-rose); }
+/* The custom cursor lives in components/CursorDot.tsx, which gates itself on
+   `pointer: fine`. The old `.cursor-dot` rule here styled a second, ungated
+   cursor that stranded a green dot wherever a touch user last tapped. */
