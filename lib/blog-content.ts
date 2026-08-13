@@ -1,17 +1,10 @@
+import { escapeHtml } from "@/lib/html";
+
 export type TextBlock = { id: string; type: "text"; content: string };
 export type ImageBlock = { id: string; type: "image"; url: string; caption: string };
 export type Block = TextBlock | ImageBlock;
 
 const ALLOWED_IMAGE_HOSTS = ["supabase.co", "images.unsplash.com"];
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 function isSafeImageUrl(url: string): boolean {
   if (url.startsWith("data:image/")) return true;

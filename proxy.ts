@@ -21,5 +21,11 @@ export const config = {
     "/admin/artworks/:path*",
     "/admin/blog/:path*",
     "/admin/orders/:path*",
+    // These two were added after this matcher list, and never added to it —
+    // /admin/categories and /admin/workshops rendered for anyone, logged in
+    // or not, with no server-side check (their data-fetches were still
+    // gated at the API layer, but the page shell itself was not).
+    "/admin/categories/:path*",
+    "/admin/workshops/:path*",
   ],
 };
