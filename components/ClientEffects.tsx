@@ -103,12 +103,37 @@ export default function ClientEffects() {
     });
 
     // ── Scroll reveal ────────────────────────────────────────────
+    // This gates real content behind a client-side animation succeeding —
+    // if the observer is ever late or never fires, that content is stuck
+    // invisible with no recourse. Chromium throttles IntersectionObserver
+    // callbacks (along with rAF and timers) while a tab is backgrounded; a
+    // user who switches away and comes back mid-scroll can land on a
+    // section whose reveal callback hasn't been flushed yet. Two backstops:
+    // re-check everything the moment the tab regains visibility, and
+    // unconditionally reveal anything still hidden after a few seconds so a
+    // slow/missed observer callback can never permanently hide content.
+    const revealTargets = document.querySelectorAll<HTMLElement>(
+      ".reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger"
+    );
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); }),
       { threshold: 0.1 }
     );
-    document.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger")
-      .forEach(el => observer.observe(el));
+    revealTargets.forEach(el => observer.observe(el));
+
+    const revealIfInView = () => {
+      const vh = window.innerHeight;
+      revealTargets.forEach(el => {
+        if (el.classList.contains("visible")) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.top < vh * 0.9 && rect.bottom > 0) el.classList.add("visible");
+      });
+    };
+    document.addEventListener("visibilitychange", revealIfInView);
+
+    const revealAllTimer = setTimeout(() => {
+      revealTargets.forEach(el => el.classList.add("visible"));
+    }, 4000);
 
     // ── Artwork cards tilt on hover ──────────────────────────────
     const cards = document.querySelectorAll<HTMLElement>(".art-card-tilt");
@@ -132,6 +157,8 @@ export default function ClientEffects() {
       cleanups.length = 0;
       ctx.revert();
       observer.disconnect();
+      document.removeEventListener("visibilitychange", revealIfInView);
+      clearTimeout(revealAllTimer);
       cards.forEach(c => {
         c.removeEventListener("mousemove",  onCardMove);
         c.removeEventListener("mouseleave", onCardLeave);
