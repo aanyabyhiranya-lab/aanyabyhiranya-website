@@ -325,9 +325,11 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             clipPath: "inset(0px 0px 0px 0px round 0px)",
             boxShadow: "0 0px 0px rgba(0,0,0,0)",
             zIndex: 22,
-            // Exactly hero.png's own background, so the area object-contain
-            // letterboxes is indistinguishable from the image itself.
-            backgroundColor: "#f7e9de",
+            // Matches hero.png's own background so the area object-contain
+            // letterboxes is indistinguishable from the image itself; the
+            // CSS variable flips with the theme so this doesn't stay beige
+            // in dark mode (see --hero-letterbox in globals.css).
+            backgroundColor: "var(--hero-letterbox)",
             willChange: "transform, clip-path, box-shadow",
           }}>
           {/* object-contain, not object-cover: hero.png is a square whose logo

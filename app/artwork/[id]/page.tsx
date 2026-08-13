@@ -5,25 +5,10 @@ import { notFound } from "next/navigation";
 import { getCategoryTree, flatten } from "@/lib/categories";
 import ArtworkGallery from "@/app/artwork/[id]/ArtworkGallery";
 
-const PLACEHOLDER: any[] = [
-  { id:"1", title:"Pressed Botanicals I", category:"Botanical & Pressed Flower", price:3200, availability:"Available", medium:"Pressed flowers on paper", description:"A delicate composition of hand-pressed botanicals arranged on archival paper. Each flower is carefully selected and preserved to retain its natural colour and form.", image_url:"https://images.unsplash.com/photo-1490750967868-88df5691cc5e?w=800&q=80", images:["https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80","https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&q=80"] },
-  { id:"2", title:"Wild Garden", category:"Botanical & Pressed Flower", price:2800, availability:"Sold", medium:"Pressed flowers, frame", description:"", image_url:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80", images:[] },
-  { id:"3", title:"Meadow Study", category:"Botanical & Pressed Flower", price:4500, availability:"On Request", medium:"Mixed botanicals", description:"", image_url:"https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&q=80", images:[] },
-  { id:"4", title:"Resin Garden Ring", category:"Resin Flower Jewellery", price:1800, availability:"Available", medium:"Resin, pressed flowers", description:"", image_url:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", images:[] },
-  { id:"5", title:"Memory Pendant", category:"Resin Flower Jewellery", price:2200, availability:"On Request", medium:"Custom resin jewellery", description:"", image_url:"https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&q=80", images:[] },
-  { id:"6", title:"Bloom Earrings", category:"Resin Flower Jewellery", price:1400, availability:"Available", medium:"Resin, dried petals", description:"", image_url:"https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80", images:[] },
-  { id:"7", title:"Forest Memory", category:"Acrylic Paintings", price:8000, availability:"Available", medium:"Acrylic on canvas, 24×30\"", description:"", image_url:"https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&q=80", images:[] },
-  { id:"8", title:"Tide", category:"Acrylic Paintings", price:6500, availability:"Sold", medium:"Acrylic on canvas, 18×24\"", description:"", image_url:"https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&q=80", images:[] },
-  { id:"9", title:"Root & Rise", category:"Acrylic Paintings", price:9500, availability:"On Request", medium:"Acrylic on canvas, 30×40\"", description:"", image_url:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80", images:[] },
-];
-
 const getArtwork = cache(async (id: string) => {
-  if (id.includes("-")) {
-    const supabase = createClient();
-    const { data } = await supabase.from("artworks").select("*").eq("id", id).single();
-    return data;
-  }
-  return PLACEHOLDER.find(p => p.id === id) ?? null;
+  const supabase = createClient();
+  const { data } = await supabase.from("artworks").select("*").eq("id", id).single();
+  return data;
 });
 
 // New rows carry category_id (the admin-managed category tree); the legacy

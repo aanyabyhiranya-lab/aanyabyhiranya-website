@@ -30,6 +30,12 @@ body {
   color: var(--color-beige);
 }
 
+/* Hero letterbox background — matches hero.png's own background in light
+   mode so the object-contain letterboxing is invisible; must flip with the
+   theme or it shows as a beige rectangle over the dark background. */
+:root { --hero-letterbox: #f7e9de; }
+.dark { --hero-letterbox: var(--color-dark); }
+
 /* Default heading font — in the base layer so any element with an explicit
    font-serif/font-script utility class correctly overrides this. */
 @layer base {

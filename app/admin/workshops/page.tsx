@@ -142,7 +142,8 @@ export default function AdminWorkshops() {
   };
 
   const togglePublish = async (w: any) => {
-    await adminFetch(`/api/admin/workshops/${w.id}`, { method: "PATCH", body: JSON.stringify({ published: !w.published }) });
+    const res = await adminFetch(`/api/admin/workshops/${w.id}`, { method: "PATCH", body: JSON.stringify({ published: !w.published }) });
+    if (!res.ok) { setErr("Couldn't update publish state."); return; }
     load();
   };
 

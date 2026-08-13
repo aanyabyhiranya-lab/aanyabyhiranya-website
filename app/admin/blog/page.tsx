@@ -138,10 +138,11 @@ export default function AdminBlog() {
   };
 
   const togglePublish = async (post: any) => {
-    await adminFetch(`/api/admin/blog/${post.id}`, {
+    const res = await adminFetch(`/api/admin/blog/${post.id}`, {
       method: "PATCH",
       body: JSON.stringify({ published: !post.published }),
     });
+    if (!res.ok) { setErr("Couldn't update publish state."); return; }
     load();
   };
 

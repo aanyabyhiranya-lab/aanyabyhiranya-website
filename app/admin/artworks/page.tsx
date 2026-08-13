@@ -89,19 +89,27 @@ export default function AdminArtworks() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setMsg("");
     const payload = { ...form, price: Number(form.price) };
-    if (editing) {
-      await adminFetch(`/api/admin/artworks/${editing}`, { method: "PUT", body: JSON.stringify(payload) });
-      setMsg("Artwork updated.");
+    const res = editing
+      ? await adminFetch(`/api/admin/artworks/${editing}`, { method: "PUT", body: JSON.stringify(payload) })
+      : await adminFetch("/api/admin/artworks", { method: "POST", body: JSON.stringify(payload) });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setMsg("Save failed: " + (json.error || "unknown error"));
     } else {
-      await adminFetch("/api/admin/artworks", { method: "POST", body: JSON.stringify(payload) });
-      setMsg("Artwork added.");
+      setMsg(editing ? "Artwork updated." : "Artwork added.");
+      setForm(EMPTY); setEditing(null); load();
     }
-    setForm(EMPTY); setEditing(null); setLoading(false); load();
+    setLoading(false);
   };
 
   const del = async (id: string) => {
     if (!confirm("Delete this artwork?")) return;
-    await adminFetch(`/api/admin/artworks/${id}`, { method: "DELETE" });
+    const res = await adminFetch(`/api/admin/artworks/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setMsg("Delete failed: " + (json.error || "unknown error"));
+      return;
+    }
     load();
   };
 
@@ -193,7 +201,7 @@ export default function AdminArtworks() {
             <input type="checkbox" id="show_in_hero" checked={form.show_in_hero} onChange={e=>setForm({...form,show_in_hero:e.target.checked})} />
             <label htmlFor="show_in_hero" className="text-sm text-dark/70 dark:text-beige/70">Use this image in the homepage hero collage</label>
           </div>
-          {msg && <p className="mt-4 text-sm text-forest dark:text-rose">{msg}</p>}
+          {msg && <p className={`mt-4 text-sm ${msg.startsWith("Save failed") || msg.startsWith("Delete failed") ? "text-red-500" : "text-forest dark:text-rose"}`}>{msg}</p>}
           <div className="mt-6 flex gap-4">
             <button type="submit" disabled={loading || uploading}
               className="text-xs tracking-widest uppercase bg-forest text-white px-8 py-3 hover:bg-teal transition-colors disabled:opacity-50">

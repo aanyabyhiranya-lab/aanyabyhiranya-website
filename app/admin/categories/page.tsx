@@ -50,15 +50,17 @@ export default function AdminCategories() {
   const rename = async (id: string, currentName: string) => {
     const next = prompt("Rename category", currentName);
     if (next === null || !next.trim() || next === currentName) return;
-    await adminFetch(`/api/admin/categories/${id}`, { method: "PUT", body: JSON.stringify({ name: next.trim() }) });
+    const res = await adminFetch(`/api/admin/categories/${id}`, { method: "PUT", body: JSON.stringify({ name: next.trim() }) });
+    if (!res.ok) { const json = await res.json().catch(() => ({})); alert(json.error || "Couldn't rename."); return; }
     load();
   };
 
   const toggleHomepage = async (node: CategoryNode) => {
-    await adminFetch(`/api/admin/categories/${node.id}`, {
+    const res = await adminFetch(`/api/admin/categories/${node.id}`, {
       method: "PUT",
       body: JSON.stringify({ show_on_homepage: !node.show_on_homepage }),
     });
+    if (!res.ok) { const json = await res.json().catch(() => ({})); alert(json.error || "Couldn't update."); return; }
     load();
   };
 
@@ -66,10 +68,11 @@ export default function AdminCategories() {
     const target = siblings[index + dir];
     if (!target) return;
     const a = siblings[index], b = target;
-    await Promise.all([
+    const results = await Promise.all([
       adminFetch(`/api/admin/categories/${a.id}`, { method: "PUT", body: JSON.stringify({ sort_order: b.sort_order }) }),
       adminFetch(`/api/admin/categories/${b.id}`, { method: "PUT", body: JSON.stringify({ sort_order: a.sort_order }) }),
     ]);
+    if (results.some(r => !r.ok)) { alert("Couldn't reorder."); return; }
     load();
   };
 
