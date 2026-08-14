@@ -14,7 +14,12 @@
   --font-sans:   "DM Sans", Inter, system-ui, sans-serif;
 }
 
-html { scroll-behavior: smooth; }
+/* Deliberately NOT `scroll-behavior: smooth` on <html>.
+   ScrollTrigger adjusts scroll position itself (pin compensation, refresh),
+   and with smooth behaviour every one of those corrections animates over
+   several hundred ms — which fights the user's own touch scrolling and reads
+   as the page stalling mid-swipe. Next.js also warns about this exact rule.
+   Anchor links that want easing can opt in per-element instead. */
 
 body {
   font-family: var(--font-sans);

@@ -182,15 +182,6 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
       const vw = box.width;
       const vh = box.height;
 
-      // A numeric scrub (1.2s) adds a catch-up lag between scroll position and
-      // the animation — invisible with gradual mouse-wheel/scrollbar input, but
-      // a fast touch fling can cover a huge scroll distance almost instantly,
-      // so the animation visibly lags behind the finger and keeps animating
-      // after the touch ends. `scrub: true` ties it directly to scroll
-      // position with zero lag, which is what touch input needs to feel smooth.
-      const isCoarsePointer =
-        typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
-
       // Hero target: top-center
       const targetX = (HERO_LAND.cx / 100 - 0.5) * vw;
       const targetY = (HERO_LAND.cy / 100 - 0.5) * vh;
@@ -209,7 +200,12 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           trigger: wrapRef.current,
           start: "top top",
           end: "bottom bottom",
-          scrub: isCoarsePointer ? true : 1.2,
+          // Numeric (not `true`) on purpose: this eases the animation toward
+          // the scroll position instead of locking it 1:1. On touch, momentum
+          // dies the instant a finger touches down — with a 1:1 scrub the
+          // visual stops dead at that moment, which reads as the scroll
+          // "stopping midway". The easing lets it glide to a stop instead.
+          scrub: 1.2,
           pin: stickyRef.current,
           anticipatePin: 1,
           onUpdate: self => {
@@ -239,7 +235,12 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
         x: targetX,
         y: targetY,
         clipPath: `inset(${insetY}px ${insetX}px ${insetY}px ${insetX}px round 999px)`,
-        boxShadow: "0 12px 32px rgba(0,0,0,0.22)",
+        // box-shadow is not GPU-composited, so scrubbing it means re-rasterising
+        // a large blurred shadow on a full-viewport element every single frame —
+        // one of the most expensive things you can animate on a phone GPU, and a
+        // direct cause of dropped frames mid-scroll. Desktop can afford it; on
+        // mobile the morph runs without it.
+        ...(isMobile ? {} : { boxShadow: "0 12px 32px rgba(0,0,0,0.22)" }),
         ease: "power2.inOut",
         duration: 0.6,
       }, 0);
@@ -268,10 +269,19 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
     });
 
     return () => ctx.revert();
-  }, [viewport.w, quotes]);
+    // isMobile is derived from viewport.w (already a dep), so it can't change
+    // without w changing — listed explicitly because the effect now branches
+    // on it for the mobile-only paint-cost reductions.
+  }, [viewport.w, isMobile, quotes]);
 
+  // The pinned region's length IS how long the page appears frozen under your
+  // finger: while pinned, swiping scrubs the animation but moves no content.
+  // 300vh means three full screen-heights of travel that go nowhere — fine with
+  // a mouse wheel, but on a phone it reads as the scroll being stuck. Mobile
+  // gets a much shorter pin so the hero hands control back to normal scrolling
+  // quickly; desktop is unchanged.
   return (
-    <div ref={wrapRef} data-hero-wrap style={{ height: "300vh" }}>
+    <div ref={wrapRef} data-hero-wrap style={{ height: isMobile ? "160vh" : "300vh" }}>
       <div ref={stickyRef} className="w-full overflow-hidden"
         style={{ height: "100vh" }}>
 
@@ -353,7 +363,11 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             // CSS variable flips with the theme so this doesn't stay beige
             // in dark mode (see --hero-letterbox in globals.css).
             backgroundColor: "var(--hero-letterbox)",
-            willChange: "transform, clip-path, box-shadow",
+            // Only `transform` actually benefits from layer promotion here —
+            // clip-path and box-shadow aren't GPU-composited, so listing them
+            // buys nothing and just costs layer memory, which is scarce on a
+            // phone. box-shadow isn't even animated on mobile any more.
+            willChange: isMobile ? "transform" : "transform, clip-path, box-shadow",
           }}>
           {/* object-contain, not object-cover: hero.png is a square whose logo
               is sized to fit the circular clip. Cover would scale it to fill
