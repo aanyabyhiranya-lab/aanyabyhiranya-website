@@ -21,6 +21,18 @@
    as the page stalling mid-swipe. Next.js also warns about this exact rule.
    Anchor links that want easing can opt in per-element instead. */
 
+/* Mobile hero height. `100vh` on iOS Safari resolves to the LARGE viewport —
+   the height with the address bar retracted — so a 100vh hero is actually
+   TALLER than what you can see, and the bottom of it sits below the fold.
+   That alone costs an extra swipe before the page starts moving, which is
+   exactly the "it doesn't clear in one swipe" feeling. `100dvh` is the
+   dynamic viewport height: precisely the visible area right now. Wrapped in
+   @supports so browsers without dvh keep the old behaviour rather than break. */
+.hero-screen { height: 100vh; }
+@supports (height: 100dvh) {
+  .hero-screen { height: 100dvh; }
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--color-beige);

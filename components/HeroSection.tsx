@@ -295,14 +295,17 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   // tall with nothing pinned, so a single thumb swipe carries you past the hero
   // and into the page — no scroll is ever absorbed without moving content.
   return (
-    <div ref={wrapRef} data-hero-wrap style={{ height: isDesktop ? "300vh" : "100vh" }}>
+    <div ref={wrapRef} data-hero-wrap
+      className={isDesktop ? undefined : "hero-screen"}
+      style={isDesktop ? { height: "300vh" } : undefined}>
       {/* `relative` is load-bearing: every child below is `absolute inset-0`,
           and without a positioned ancestor they resolve against the page
           wrapper instead — stretching the hero to the full document height.
           On desktop GSAP's pin happens to set position:fixed, which masked
           this; unpinned mobile has no such accident. */}
-      <div ref={stickyRef} className="relative w-full overflow-hidden"
-        style={{ height: "100vh" }}>
+      <div ref={stickyRef}
+        className={`relative w-full overflow-hidden${isDesktop ? "" : " hero-screen"}`}
+        style={isDesktop ? { height: "100vh" } : undefined}>
 
         {/* Page bg */}
         <div className="absolute inset-0 bg-beige dark:bg-dark" />
