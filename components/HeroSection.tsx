@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -109,6 +110,13 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
   const [quotes, setQuotes] = useState(QUOTES);
   const isMobile = viewport.w > 0 && viewport.w < 768;
+  // Deliberately false until the viewport has actually been measured, so the
+  // desktop-only collage is never in the first render. `!isMobile` would be
+  // true at w === 0, meaning a phone would render those nine large images for
+  // one frame and kick off the downloads before unmounting them — the fetches
+  // don't get cancelled, so the cost lands anyway. Defaulting to the mobile
+  // treatment and opting in to desktop avoids that entirely.
+  const isDesktop = viewport.w >= 768;
 
   // Different quote order each visit — shuffled post-mount (not during the
   // initial render) so server and client agree on the first paint.
@@ -170,6 +178,15 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
   useEffect(() => {
     if (!viewport.w || !stickyRef.current) return;
+    // No pinning, no scrubbing, no scroll-linked work at all on phones.
+    //
+    // Pinning is inherently at odds with a thumb swipe: while pinned the page
+    // consumes scroll without moving any content, so a fling that should carry
+    // you down the page instead appears to stall. No amount of tuning the
+    // easing fixes that — the pause IS the pin. On mobile the hero is just a
+    // normal full-height section that scrolls away in one swipe, and the
+    // collage (nine multi-megapixel images) isn't rendered at all.
+    if (isMobile) return;
     const ctx = gsap.context(() => {
       // Measure the sticky box itself rather than window.innerWidth/innerHeight.
       // CSS `vh` (the 100vh/300vh in this component's own styles) resolves to
@@ -274,22 +291,30 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
     // on it for the mobile-only paint-cost reductions.
   }, [viewport.w, isMobile, quotes]);
 
-  // The pinned region's length IS how long the page appears frozen under your
-  // finger: while pinned, swiping scrubs the animation but moves no content.
-  // 300vh means three full screen-heights of travel that go nowhere — fine with
-  // a mouse wheel, but on a phone it reads as the scroll being stuck. Mobile
-  // gets a much shorter pin so the hero hands control back to normal scrolling
-  // quickly; desktop is unchanged.
+  // Desktop keeps the 300vh pinned scroll-scrub. Mobile is exactly one screen
+  // tall with nothing pinned, so a single thumb swipe carries you past the hero
+  // and into the page — no scroll is ever absorbed without moving content.
   return (
-    <div ref={wrapRef} data-hero-wrap style={{ height: isMobile ? "160vh" : "300vh" }}>
-      <div ref={stickyRef} className="w-full overflow-hidden"
+    <div ref={wrapRef} data-hero-wrap style={{ height: isDesktop ? "300vh" : "100vh" }}>
+      {/* `relative` is load-bearing: every child below is `absolute inset-0`,
+          and without a positioned ancestor they resolve against the page
+          wrapper instead — stretching the hero to the full document height.
+          On desktop GSAP's pin happens to set position:fixed, which masked
+          this; unpinned mobile has no such accident. */}
+      <div ref={stickyRef} className="relative w-full overflow-hidden"
         style={{ height: "100vh" }}>
 
         {/* Page bg */}
         <div className="absolute inset-0 bg-beige dark:bg-dark" />
 
         {/* Collage — CSS Grid, so tiles structurally cannot overlap regardless of
-            viewport width, and integer spans give real big/small size variation. */}
+            viewport width, and integer spans give real big/small size variation.
+            Desktop only: these are nine multi-megapixel photos whose decoded
+            bitmaps run to hundreds of MB, which a phone can't hold — it evicts
+            and re-decodes them while you scroll, and that shows up as the scroll
+            hitching. They're also purely decorative; the real work is in the
+            collections below. */}
+        {isDesktop && (
         <div ref={collageRef} className="absolute inset-0 z-10 grid gap-2 md:gap-3 p-2 md:p-3"
           style={gridTemplate}>
           {activeCollage.map((c, i) => (
@@ -300,9 +325,13 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
                 opacity: 0,
                 willChange: "transform, opacity",
               }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={c.src} alt="" className="w-full h-full object-cover"
-                loading="lazy" draggable={false} />
+              {/* next/image, not a raw <img>: the source art is up to 12
+                  megapixels (~4MB each), and a raw tag ships the original
+                  untouched. This serves a resized WebP/AVIF at roughly the
+                  size actually rendered. */}
+              <Image src={c.src} alt="" fill draggable={false}
+                sizes="(max-width: 1280px) 25vw, 20vw"
+                className="object-cover" />
               {c.fade >= 1 && (
                 <div className="absolute inset-0 pointer-events-none" style={{
                   background: c.fade === 1
@@ -328,10 +357,13 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             background: "linear-gradient(to bottom, transparent 50%, rgba(28,28,26,0.7) 78%, rgba(28,28,26,1) 100%)",
           }} />
         </div>
+        )}
 
         {/* Middle centrepiece — its own grid using the same template/gap/padding as
             the collage above, so its slot lines up exactly with the reserved gap
-            instead of relying on a separately hand-computed pixel position. */}
+            instead of relying on a separately hand-computed pixel position.
+            Desktop only, for the same decode-cost reason as the collage. */}
+        {isDesktop && (
         <div className="absolute inset-0 grid gap-2 md:gap-3 p-2 md:p-3 pointer-events-none"
           style={{ ...gridTemplate, zIndex: 15 }}>
           <div ref={middleRef}
@@ -343,11 +375,12 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
               willChange: "transform, opacity",
               boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
             }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={activeMiddle.src} alt="" className="w-full h-full object-cover"
-              draggable={false} />
+            <Image src={activeMiddle.src} alt="" fill draggable={false}
+              sizes="(max-width: 1280px) 40vw, 30vw"
+              className="object-cover" />
           </div>
         </div>
+        )}
 
         {/* Hero image — full screen, gradually clip-paths + shrinks into a
             circular badge at top-center as a single continuous morph */}
@@ -377,9 +410,10 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
               is the same box the clip-path targets, so the logo is never cut on
               any screen shape. The image's own background (#f7e9de) matches the
               page beige, so the letterboxed area is invisible. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/hero.png" alt="AanyaByHiranya"
-            className="w-full h-full object-contain" />
+          {/* priority: this is the largest-contentful-paint element on every
+              first visit, so it must not wait behind lazy-loading heuristics. */}
+          <Image src="/hero.png" alt="AanyaByHiranya" fill priority
+            sizes="100vw" className="object-contain" />
         </div>
 
         {/* Rotating quote + Discover CTA — a sibling of the hero image, not a

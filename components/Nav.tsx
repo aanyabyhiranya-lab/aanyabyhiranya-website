@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "./ThemeProvider";
 import { Sun, Moon, Menu, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -21,31 +22,41 @@ export default function Nav() {
   const lastY = useRef(0);
   const pathname = usePathname();
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // On pages with a pinned hero (home), the nav stays out of the way while
-  // scrolling down through it, reappears if you scroll back up towards the
-  // top, and becomes permanently visible once you've scrolled past it — same
-  // as it is everywhere else on the site.
+  // One scroll listener for both behaviours (nav background + hide-through-hero),
+  // rAF-throttled, reading NO layout.
+  //
+  // This used to be two listeners, and the second one called querySelector +
+  // getBoundingClientRect() on every single scroll event. Measuring geometry
+  // mid-scroll forces a synchronous layout, and doing that on the same frames
+  // GSAP is writing styles is textbook layout thrashing — the browser recalcs
+  // the whole page repeatedly during a swipe, which is exactly what makes a
+  // fling stutter. The hero's position is now measured once (and on resize),
+  // and the handler only compares numbers.
   useEffect(() => {
     lastY.current = window.scrollY;
 
-    const onScroll = () => {
-      const y = window.scrollY;
+    let heroBottom = Infinity;
+    let hasHero = false;
+    const measureHero = () => {
       const heroEl = document.querySelector<HTMLElement>("[data-hero-wrap]");
+      hasHero = !!heroEl;
+      heroBottom = heroEl
+        ? heroEl.getBoundingClientRect().bottom + window.scrollY
+        : Infinity;
+    };
+    measureHero();
 
-      if (!heroEl) {
+    let queued = false;
+    const update = () => {
+      queued = false;
+      const y = window.scrollY;
+      setScrolled(y > 40);
+
+      if (!hasHero) {
         setNavHidden(false);
         lastY.current = y;
         return;
       }
-
-      const heroBottom = heroEl.getBoundingClientRect().bottom + y;
-
       if (y >= heroBottom - 40) {
         setNavHidden(false); // clear of the hero — permanent from here on
       } else if (y < 60) {
@@ -58,9 +69,21 @@ export default function Nav() {
       lastY.current = y;
     };
 
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", measureHero);
+    window.addEventListener("orientationchange", measureHero);
+    update();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measureHero);
+      window.removeEventListener("orientationchange", measureHero);
+    };
   }, [pathname]);
 
   // Close mobile menu on route change
@@ -78,8 +101,9 @@ export default function Nav() {
 
         {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="AanyaByHiranya"
+          {/* 500x500 source rendered at 36px — next/image serves a 36px-class
+              WebP instead of the full PNG on every page load. */}
+          <Image src="/logo.png" alt="AanyaByHiranya" width={36} height={36} priority
             className="h-9 w-auto object-contain"
             onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
           <span className="font-serif text-lg md:text-xl tracking-wide text-forest dark:text-beige">
