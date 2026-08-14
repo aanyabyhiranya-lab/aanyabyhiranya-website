@@ -168,6 +168,15 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
       const vw = box.width;
       const vh = box.height;
 
+      // A numeric scrub (1.2s) adds a catch-up lag between scroll position and
+      // the animation — invisible with gradual mouse-wheel/scrollbar input, but
+      // a fast touch fling can cover a huge scroll distance almost instantly,
+      // so the animation visibly lags behind the finger and keeps animating
+      // after the touch ends. `scrub: true` ties it directly to scroll
+      // position with zero lag, which is what touch input needs to feel smooth.
+      const isCoarsePointer =
+        typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+
       // Hero target: top-center
       const targetX = (HERO_LAND.cx / 100 - 0.5) * vw;
       const targetY = (HERO_LAND.cy / 100 - 0.5) * vh;
@@ -186,7 +195,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           trigger: wrapRef.current,
           start: "top top",
           end: "bottom bottom",
-          scrub: 1.2,
+          scrub: isCoarsePointer ? true : 1.2,
           pin: stickyRef.current,
           anticipatePin: 1,
           onUpdate: self => {
