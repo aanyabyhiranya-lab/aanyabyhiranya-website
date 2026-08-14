@@ -6,6 +6,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Second half of the same mobile problem the viewport effect below guards
+// against: even with React no longer rebuilding the timeline, ScrollTrigger
+// itself refreshes (recalculating every pin's start/end) on window resize —
+// which on a phone fires every time the address bar hides or shows mid-scroll.
+// This tells it to ignore resizes where only the height changed on touch.
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 const QUOTES = [
   "Ready to love?",
   "Art for everyday.",
@@ -123,18 +130,25 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
     gridTemplateRows: `repeat(${gridRows}, 1fr)`,
   };
 
-  // Tracks the REAL live viewport, not just the mobile/desktop breakpoint.
-  // Mobile browsers resize window.innerHeight as the address bar hides/shows
-  // while scrolling, so a value captured once at mount goes stale mid-scroll
-  // — that's what was producing a non-square (rounded-rectangle) crop and
-  // clipping into the logo on phones. Re-measuring on every real resize
-  // (including visualViewport, which fires for address-bar changes that
-  // `resize` sometimes misses) keeps the circle math honest.
+  // Tracks viewport WIDTH only, deliberately.
+  //
+  // Mobile browsers change window.innerHeight constantly while you scroll, as
+  // the address bar hides and shows. Committing that to state re-runs the
+  // ScrollTrigger effect below, whose cleanup calls ctx.revert() — so the
+  // pinned hero timeline was being destroyed and rebuilt mid-scroll, every
+  // time the address bar moved. That's a hard hitch under your finger.
+  //
+  // Height isn't needed here anyway: the circle math reads the sticky box's
+  // own getBoundingClientRect() (see below), and that box is sized in CSS vh,
+  // which resolves against the LARGE viewport and so doesn't move with the
+  // address bar. Width is what actually matters (the mobile/desktop breakpoint
+  // and orientation changes), and a genuine orientation change moves width too.
   useEffect(() => {
     const measure = () => {
       setViewport(prev => {
         const w = window.innerWidth, h = window.innerHeight;
-        return prev.w === w && prev.h === h ? prev : { w, h };
+        // Height-only changes are the address bar — ignore them entirely.
+        return prev.w === w ? prev : { w, h };
       });
     };
     measure();
@@ -155,7 +169,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   }, []);
 
   useEffect(() => {
-    if (!viewport.w || !viewport.h || !stickyRef.current) return;
+    if (!viewport.w || !stickyRef.current) return;
     const ctx = gsap.context(() => {
       // Measure the sticky box itself rather than window.innerWidth/innerHeight.
       // CSS `vh` (the 100vh/300vh in this component's own styles) resolves to
@@ -254,7 +268,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
     });
 
     return () => ctx.revert();
-  }, [viewport.w, viewport.h, quotes]);
+  }, [viewport.w, quotes]);
 
   return (
     <div ref={wrapRef} data-hero-wrap style={{ height: "300vh" }}>
