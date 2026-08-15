@@ -105,20 +105,11 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   const heroRef      = useRef<HTMLDivElement>(null);
   const collageRef   = useRef<HTMLDivElement>(null);
   const middleRef    = useRef<HTMLDivElement>(null);
-  const badgeRef     = useRef<HTMLDivElement>(null);
-  const heroTextRef  = useRef<HTMLDivElement>(null);
   const quoteRef     = useRef<HTMLParagraphElement>(null);
   const quoteIndexRef = useRef(0);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
   const [quotes, setQuotes] = useState(QUOTES);
   const isMobile = viewport.w > 0 && viewport.w < 768;
-  // Deliberately false until the viewport has actually been measured, so the
-  // desktop-only collage is never in the first render. `!isMobile` would be
-  // true at w === 0, meaning a phone would render those nine large images for
-  // one frame and kick off the downloads before unmounting them — the fetches
-  // don't get cancelled, so the cost lands anyway. Defaulting to the mobile
-  // treatment and opting in to desktop avoids that entirely.
-  const isDesktop = viewport.w >= 768;
   // Nothing viewport-dependent renders until we've actually measured, so a
   // phone never fetches the desktop tile set for a frame before swapping.
   const measured = viewport.w > 0;
@@ -183,55 +174,19 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
   useEffect(() => {
     if (!viewport.w || !stickyRef.current) return;
+    // One timeline for every screen size — mobile runs the same pinned morph
+    // as desktop, just with the mobile grid and tile set.
+    //
+    // Worth recording why this came back: when mobile scrolling was finally
+    // fixed, five things changed at once — the pin came off, 12-megapixel
+    // images started going through next/image, Nav stopped forcing a layout
+    // on every scroll event, the timeline stopped rebuilding on address-bar
+    // resize, and scroll-behavior: smooth was removed. The pin got the blame
+    // without ever being isolated. The image fix alone took a phone from
+    // roughly 300MB of decoded bitmaps to a few MB, which is far more likely
+    // to have been what was evicting textures mid-scroll. All of those fixes
+    // stay; the pin is back on trial by itself.
     const ctx = gsap.context(() => {
-      // ── Mobile: scroll-driven, but never pinned ──────────────────────
-      //
-      // Pinning is what caused the stall: while pinned the page swallows
-      // scroll without moving content, so a thumb fling goes nowhere. But
-      // "pinned" and "scroll-driven" aren't the same thing — the animation
-      // can be driven entirely by scroll position while the section moves
-      // normally under your finger. That's what this does: the hero plays
-      // out as it travels off-screen, so every pixel you scroll still scrolls.
-      //
-      // Everything here is transform + opacity only. Both are composited on
-      // the GPU, so this costs the main thread essentially nothing per frame
-      // — unlike the desktop morph, which scrubs clip-path and box-shadow.
-      if (isMobile) {
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: wrapRef.current,
-            start: "top top",
-            end: "bottom top",
-            scrub: 0.5,
-            // deliberately no `pin`
-          },
-        });
-
-        // Collage sits "behind": it lags furthest, which reads as depth.
-        const tiles = collageRef.current?.querySelectorAll<HTMLElement>(".cc");
-        if (tiles?.length) {
-          tl.to(tiles, {
-            yPercent: (i: number) => 14 + (i % 3) * 6,
-            ease: "none",
-          }, 0);
-        }
-
-        // Medallion is the foreground: lags a little, shrinks and dims as it
-        // leaves, so the eye follows it out rather than it just sliding off.
-        if (badgeRef.current) {
-          tl.to(badgeRef.current, {
-            yPercent: 6, scale: 0.86, opacity: 0.25, ease: "none",
-          }, 0);
-        }
-
-        // Quote + CTA travel with the page and fade early, so they're gone
-        // before they'd collide with the section below.
-        if (heroTextRef.current) {
-          tl.to(heroTextRef.current, { yPercent: -14, opacity: 0, ease: "none" }, 0);
-        }
-        return;
-      }
-
       // Measure the sticky box itself rather than window.innerWidth/innerHeight.
       // CSS `vh` (the 100vh/300vh in this component's own styles) resolves to
       // the browser's LARGE viewport (chrome retracted), while JS innerHeight
@@ -339,17 +294,17 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   // tall with nothing pinned, so a single thumb swipe carries you past the hero
   // and into the page — no scroll is ever absorbed without moving content.
   return (
-    <div ref={wrapRef} data-hero-wrap
-      className={isDesktop ? undefined : "hero-screen"}
-      style={isDesktop ? { height: "300vh" } : undefined}>
+    <div ref={wrapRef} data-hero-wrap style={{ height: "300vh" }}>
       {/* `relative` is load-bearing: every child below is `absolute inset-0`,
           and without a positioned ancestor they resolve against the page
           wrapper instead — stretching the hero to the full document height.
           On desktop GSAP's pin happens to set position:fixed, which masked
           this; unpinned mobile has no such accident. */}
-      <div ref={stickyRef}
-        className={`relative w-full overflow-hidden${isDesktop ? "" : " hero-screen"}`}
-        style={isDesktop ? { height: "100vh" } : undefined}>
+      {/* hero-screen = 100dvh (falling back to 100vh). dvh is the height that's
+          actually visible, so on iOS the pinned hero fills the screen exactly
+          instead of running under the address bar. `relative` is load-bearing:
+          every child is `absolute inset-0` and needs a positioned ancestor. */}
+      <div ref={stickyRef} className="relative w-full overflow-hidden hero-screen">
 
         {/* Page bg */}
         <div className="absolute inset-0 bg-beige dark:bg-dark" />
@@ -369,15 +324,9 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
               style={{
                 gridColumn: `${c.col} / span ${c.colSpan}`,
                 gridRow: `${c.row} / span ${c.rowSpan}`,
-                // Desktop starts hidden and is revealed by the scrubbed
-                // timeline. Mobile carries its final opacity and plays a
-                // one-shot staggered fade instead: the keyframe only sets
-                // `from`, so it animates up to whatever this element's own
-                // opacity is. Runs once on load, never during scroll.
-                opacity: isDesktop ? 0 : FADE_OPACITY[c.fade],
-                animation: isDesktop
-                  ? undefined
-                  : `heroTileIn 0.65s cubic-bezier(0.22,1,0.36,1) ${0.05 * i}s both`,
+                // Hidden until the scrubbed timeline reveals them — same on
+                // every screen size now.
+                opacity: 0,
                 willChange: "transform, opacity",
               }}>
               {/* next/image, not a raw <img>: the source art is up to 12
@@ -417,9 +366,8 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
         {/* Middle centrepiece — its own grid using the same template/gap/padding as
             the collage above, so its slot lines up exactly with the reserved gap
-            instead of relying on a separately hand-computed pixel position.
-            Desktop only, for the same decode-cost reason as the collage. */}
-        {isDesktop && (
+            instead of relying on a separately hand-computed pixel position. */}
+        {measured && (
         <div className="absolute inset-0 grid gap-2 md:gap-3 p-2 md:p-3 pointer-events-none"
           style={{ ...gridTemplate, zIndex: 15 }}>
           <div ref={middleRef}
@@ -438,72 +386,45 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
         </div>
         )}
 
-        {/* Hero logo.
-
-            Desktop: full screen, gradually clip-paths + shrinks into a circular
-            badge at top-center as a single continuous scroll-driven morph.
-
-            Mobile: that morph is exactly what required pinning the page, so
-            instead the logo is rendered directly in its *destination* state — a
-            centred medallion over the collage — and simply eases in on load.
-            Same composition the desktop animation arrives at, reached without
-            absorbing a single pixel of scroll. */}
-        {isDesktop ? (
-          <div ref={heroRef}
-            className="absolute inset-0 overflow-hidden"
-            style={{
-              transformOrigin: "center center",
-              clipPath: "inset(0px 0px 0px 0px round 0px)",
-              boxShadow: "0 0px 0px rgba(0,0,0,0)",
-              zIndex: 22,
-              // Matches hero.png's own background so the area object-contain
-              // letterboxes is indistinguishable from the image itself; the
-              // CSS variable flips with the theme so this doesn't stay beige
-              // in dark mode (see --hero-letterbox in globals.css).
-              backgroundColor: "var(--hero-letterbox)",
-              willChange: "transform, clip-path, box-shadow",
-            }}>
-            {/* object-contain, not object-cover: hero.png is a square whose logo
-                is sized to fit the circular clip. Cover would scale it to fill
-                the viewport and crop the overflowing axis — on a tall phone that
-                meant cutting several hundred px off each side, straight through
-                the logo. Contain renders it at exactly min(vw,vh) centred, which
-                is the same box the clip-path targets, so the logo is never cut on
-                any screen shape. */}
-            {/* priority: this is the largest-contentful-paint element on every
-                first visit, so it must not wait behind lazy-loading heuristics. */}
-            <Image src="/hero.png" alt="AanyaByHiranya" fill priority
-              sizes="100vw" className="object-contain" />
-          </div>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            style={{ zIndex: 22 }}>
-            <div ref={badgeRef} className="relative rounded-full overflow-hidden"
-              style={{
-                // min() so it stays a circle that fits on both narrow phones
-                // and short landscape screens, never overflowing either axis.
-                width: "min(68vw, 46vh)",
-                height: "min(68vw, 46vh)",
-                backgroundColor: "var(--hero-letterbox)",
-                boxShadow: "0 14px 40px rgba(0,0,0,0.22)",
-                // No CSS entrance here on purpose: GSAP owns this element's
-                // transform AND opacity for the scroll animation, and two
-                // systems writing the same properties fight. The collage
-                // fading in is enough life on load.
-                willChange: "transform, opacity",
-              }}>
-              <Image src="/hero.png" alt="AanyaByHiranya" fill priority
-                sizes="70vw" className="object-contain" />
-            </div>
-          </div>
-        )}
+        {/* Hero logo — full screen, gradually clip-paths + shrinks into a
+            circular badge at top-center as a single continuous scroll-driven
+            morph. Same on every screen size. */}
+        <div ref={heroRef}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            transformOrigin: "center center",
+            clipPath: "inset(0px 0px 0px 0px round 0px)",
+            boxShadow: "0 0px 0px rgba(0,0,0,0)",
+            zIndex: 22,
+            // Matches hero.png's own background so the area object-contain
+            // letterboxes is indistinguishable from the image itself; the
+            // CSS variable flips with the theme so this doesn't stay beige
+            // in dark mode (see --hero-letterbox in globals.css).
+            backgroundColor: "var(--hero-letterbox)",
+            // clip-path and box-shadow aren't GPU-composited, so promoting for
+            // them buys nothing and costs layer memory — which is scarce on a
+            // phone, and box-shadow isn't scrubbed there anyway.
+            willChange: isMobile ? "transform" : "transform, clip-path, box-shadow",
+          }}>
+          {/* object-contain, not object-cover: hero.png is a square whose logo
+              is sized to fit the circular clip. Cover would scale it to fill
+              the viewport and crop the overflowing axis — on a tall phone that
+              meant cutting several hundred px off each side, straight through
+              the logo. Contain renders it at exactly min(vw,vh) centred, which
+              is the same box the clip-path targets, so the logo is never cut on
+              any screen shape. */}
+          {/* priority: this is the largest-contentful-paint element on every
+              first visit, so it must not wait behind lazy-loading heuristics. */}
+          <Image src="/hero.png" alt="AanyaByHiranya" fill priority
+            sizes="100vw" className="object-contain" />
+        </div>
 
         {/* Rotating quote + Discover CTA — a sibling of the hero image, not a
             child, so it's unaffected by the hero's own shrink/clip-path morph
             and stays full-size and legible for the whole pinned scroll. It
             leaves the screen only because it scrolls away with the rest of
             the sticky section once the pin releases past the hero. */}
-        <div ref={heroTextRef} className="absolute inset-x-0 bottom-20 md:bottom-24 flex flex-col items-center gap-5 px-6 text-center" style={{ zIndex: 25 }}>
+        <div className="absolute inset-x-0 bottom-20 md:bottom-24 flex flex-col items-center gap-5 px-6 text-center" style={{ zIndex: 25 }}>
           <p ref={quoteRef} className="font-serif text-2xl md:text-4xl text-forest dark:text-beige">
             {quotes[0]}
           </p>
@@ -526,20 +447,12 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             0%   { transform: translateY(-100%); }
             100% { transform: translateY(300%); }
           }
-          /* Opacity ONLY — deliberately no transform. GSAP drives these tiles'
-             transform for the scroll animation, and two systems writing the
-             same property fight each other. Splitting them (CSS owns the
-             fade-in, GSAP owns the movement) lets both run cleanly.
-             Only 'from' is declared, so the tween runs up to each tile's own
-             inline opacity, which differs per depth row. */
-          @keyframes heroTileIn {
-            from { opacity: 0; }
-          }
-          /* Entrance flourish only — never a substitute for content being
-             visible. Anyone who's asked the OS to reduce motion gets the
-             final state immediately. */
+          /* The collage is revealed by the scrubbed timeline, so it starts at
+             opacity 0. If someone has asked the OS to reduce motion, the
+             timeline never runs for them — reveal the tiles outright rather
+             than leaving content permanently invisible. */
           @media (prefers-reduced-motion: reduce) {
-            .cc { animation: none !important; }
+            .cc { opacity: 1 !important; }
           }
         `}</style>
       </div>
