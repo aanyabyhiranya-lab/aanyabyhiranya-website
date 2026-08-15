@@ -117,6 +117,9 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   // don't get cancelled, so the cost lands anyway. Defaulting to the mobile
   // treatment and opting in to desktop avoids that entirely.
   const isDesktop = viewport.w >= 768;
+  // Nothing viewport-dependent renders until we've actually measured, so a
+  // phone never fetches the desktop tile set for a frame before swapping.
+  const measured = viewport.w > 0;
 
   // Different quote order each visit — shuffled post-mount (not during the
   // initial render) so server and client agree on the first paint.
@@ -312,12 +315,12 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
         {/* Collage — CSS Grid, so tiles structurally cannot overlap regardless of
             viewport width, and integer spans give real big/small size variation.
-            Desktop only: these are nine multi-megapixel photos whose decoded
-            bitmaps run to hundreds of MB, which a phone can't hold — it evicts
-            and re-decodes them while you scroll, and that shows up as the scroll
-            hitching. They're also purely decorative; the real work is in the
-            collections below. */}
-        {isDesktop && (
+            Rendered only once the viewport is measured, so a phone never fetches
+            the desktop tile set for a frame before swapping to the mobile one.
+            Desktop reveals these by scrubbing the pinned timeline; mobile fades
+            them in once on load (see below) — same look arriving, no scroll
+            hijacked to produce it. */}
+        {measured && (
         <div ref={collageRef} className="absolute inset-0 z-10 grid gap-2 md:gap-3 p-2 md:p-3"
           style={gridTemplate}>
           {activeCollage.map((c, i) => (
@@ -325,15 +328,24 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
               style={{
                 gridColumn: `${c.col} / span ${c.colSpan}`,
                 gridRow: `${c.row} / span ${c.rowSpan}`,
-                opacity: 0,
+                // Desktop starts hidden and is revealed by the scrubbed
+                // timeline. Mobile carries its final opacity and plays a
+                // one-shot staggered fade instead: the keyframe only sets
+                // `from`, so it animates up to whatever this element's own
+                // opacity is. Runs once on load, never during scroll.
+                opacity: isDesktop ? 0 : FADE_OPACITY[c.fade],
+                animation: isDesktop
+                  ? undefined
+                  : `heroTileIn 0.65s cubic-bezier(0.22,1,0.36,1) ${0.05 * i}s both`,
                 willChange: "transform, opacity",
               }}>
               {/* next/image, not a raw <img>: the source art is up to 12
                   megapixels (~4MB each), and a raw tag ships the original
                   untouched. This serves a resized WebP/AVIF at roughly the
-                  size actually rendered. */}
+                  size actually rendered — which is what makes showing these
+                  on a phone affordable at all. */}
               <Image src={c.src} alt="" fill draggable={false}
-                sizes="(max-width: 1280px) 25vw, 20vw"
+                sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
                 className="object-cover" />
               {c.fade >= 1 && (
                 <div className="absolute inset-0 pointer-events-none" style={{
@@ -385,39 +397,61 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
         </div>
         )}
 
-        {/* Hero image — full screen, gradually clip-paths + shrinks into a
-            circular badge at top-center as a single continuous morph */}
-        <div ref={heroRef}
-          className="absolute inset-0 overflow-hidden"
-          style={{
-            transformOrigin: "center center",
-            clipPath: "inset(0px 0px 0px 0px round 0px)",
-            boxShadow: "0 0px 0px rgba(0,0,0,0)",
-            zIndex: 22,
-            // Matches hero.png's own background so the area object-contain
-            // letterboxes is indistinguishable from the image itself; the
-            // CSS variable flips with the theme so this doesn't stay beige
-            // in dark mode (see --hero-letterbox in globals.css).
-            backgroundColor: "var(--hero-letterbox)",
-            // Only `transform` actually benefits from layer promotion here —
-            // clip-path and box-shadow aren't GPU-composited, so listing them
-            // buys nothing and just costs layer memory, which is scarce on a
-            // phone. box-shadow isn't even animated on mobile any more.
-            willChange: isMobile ? "transform" : "transform, clip-path, box-shadow",
-          }}>
-          {/* object-contain, not object-cover: hero.png is a square whose logo
-              is sized to fit the circular clip. Cover would scale it to fill
-              the viewport and crop the overflowing axis — on a tall phone that
-              meant cutting several hundred px off each side, straight through
-              the logo. Contain renders it at exactly min(vw,vh) centred, which
-              is the same box the clip-path targets, so the logo is never cut on
-              any screen shape. The image's own background (#f7e9de) matches the
-              page beige, so the letterboxed area is invisible. */}
-          {/* priority: this is the largest-contentful-paint element on every
-              first visit, so it must not wait behind lazy-loading heuristics. */}
-          <Image src="/hero.png" alt="AanyaByHiranya" fill priority
-            sizes="100vw" className="object-contain" />
-        </div>
+        {/* Hero logo.
+
+            Desktop: full screen, gradually clip-paths + shrinks into a circular
+            badge at top-center as a single continuous scroll-driven morph.
+
+            Mobile: that morph is exactly what required pinning the page, so
+            instead the logo is rendered directly in its *destination* state — a
+            centred medallion over the collage — and simply eases in on load.
+            Same composition the desktop animation arrives at, reached without
+            absorbing a single pixel of scroll. */}
+        {isDesktop ? (
+          <div ref={heroRef}
+            className="absolute inset-0 overflow-hidden"
+            style={{
+              transformOrigin: "center center",
+              clipPath: "inset(0px 0px 0px 0px round 0px)",
+              boxShadow: "0 0px 0px rgba(0,0,0,0)",
+              zIndex: 22,
+              // Matches hero.png's own background so the area object-contain
+              // letterboxes is indistinguishable from the image itself; the
+              // CSS variable flips with the theme so this doesn't stay beige
+              // in dark mode (see --hero-letterbox in globals.css).
+              backgroundColor: "var(--hero-letterbox)",
+              willChange: "transform, clip-path, box-shadow",
+            }}>
+            {/* object-contain, not object-cover: hero.png is a square whose logo
+                is sized to fit the circular clip. Cover would scale it to fill
+                the viewport and crop the overflowing axis — on a tall phone that
+                meant cutting several hundred px off each side, straight through
+                the logo. Contain renders it at exactly min(vw,vh) centred, which
+                is the same box the clip-path targets, so the logo is never cut on
+                any screen shape. */}
+            {/* priority: this is the largest-contentful-paint element on every
+                first visit, so it must not wait behind lazy-loading heuristics. */}
+            <Image src="/hero.png" alt="AanyaByHiranya" fill priority
+              sizes="100vw" className="object-contain" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ zIndex: 22 }}>
+            <div className="relative rounded-full overflow-hidden"
+              style={{
+                // min() so it stays a circle that fits on both narrow phones
+                // and short landscape screens, never overflowing either axis.
+                width: "min(68vw, 46vh)",
+                height: "min(68vw, 46vh)",
+                backgroundColor: "var(--hero-letterbox)",
+                boxShadow: "0 14px 40px rgba(0,0,0,0.22)",
+                animation: "heroBadgeIn 0.8s cubic-bezier(0.22,1,0.36,1) both",
+              }}>
+              <Image src="/hero.png" alt="AanyaByHiranya" fill priority
+                sizes="70vw" className="object-contain" />
+            </div>
+          </div>
+        )}
 
         {/* Rotating quote + Discover CTA — a sibling of the hero image, not a
             child, so it's unaffected by the hero's own shrink/clip-path morph
@@ -446,6 +480,21 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           @keyframes scrollLine {
             0%   { transform: translateY(-100%); }
             100% { transform: translateY(300%); }
+          }
+          /* Only 'from' is declared: the tween then runs up to each tile's own
+             inline opacity, which differs per depth row, so one keyframe serves
+             every tile without needing a per-tile animation. */
+          @keyframes heroTileIn {
+            from { opacity: 0; transform: translateY(16px); }
+          }
+          @keyframes heroBadgeIn {
+            from { opacity: 0; transform: scale(0.92); }
+          }
+          /* Entrance flourishes only — never a substitute for content being
+             visible. Anyone who's asked the OS to reduce motion just gets the
+             final state immediately. */
+          @media (prefers-reduced-motion: reduce) {
+            .cc, [style*="heroBadgeIn"] { animation: none !important; }
           }
         `}</style>
       </div>
