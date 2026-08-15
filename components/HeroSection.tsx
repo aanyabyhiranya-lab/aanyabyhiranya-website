@@ -105,6 +105,8 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   const heroRef      = useRef<HTMLDivElement>(null);
   const collageRef   = useRef<HTMLDivElement>(null);
   const middleRef    = useRef<HTMLDivElement>(null);
+  const badgeRef     = useRef<HTMLDivElement>(null);
+  const heroTextRef  = useRef<HTMLDivElement>(null);
   const quoteRef     = useRef<HTMLParagraphElement>(null);
   const quoteIndexRef = useRef(0);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
@@ -181,16 +183,55 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
   useEffect(() => {
     if (!viewport.w || !stickyRef.current) return;
-    // No pinning, no scrubbing, no scroll-linked work at all on phones.
-    //
-    // Pinning is inherently at odds with a thumb swipe: while pinned the page
-    // consumes scroll without moving any content, so a fling that should carry
-    // you down the page instead appears to stall. No amount of tuning the
-    // easing fixes that — the pause IS the pin. On mobile the hero is just a
-    // normal full-height section that scrolls away in one swipe, and the
-    // collage (nine multi-megapixel images) isn't rendered at all.
-    if (isMobile) return;
     const ctx = gsap.context(() => {
+      // ── Mobile: scroll-driven, but never pinned ──────────────────────
+      //
+      // Pinning is what caused the stall: while pinned the page swallows
+      // scroll without moving content, so a thumb fling goes nowhere. But
+      // "pinned" and "scroll-driven" aren't the same thing — the animation
+      // can be driven entirely by scroll position while the section moves
+      // normally under your finger. That's what this does: the hero plays
+      // out as it travels off-screen, so every pixel you scroll still scrolls.
+      //
+      // Everything here is transform + opacity only. Both are composited on
+      // the GPU, so this costs the main thread essentially nothing per frame
+      // — unlike the desktop morph, which scrubs clip-path and box-shadow.
+      if (isMobile) {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: wrapRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.5,
+            // deliberately no `pin`
+          },
+        });
+
+        // Collage sits "behind": it lags furthest, which reads as depth.
+        const tiles = collageRef.current?.querySelectorAll<HTMLElement>(".cc");
+        if (tiles?.length) {
+          tl.to(tiles, {
+            yPercent: (i: number) => 14 + (i % 3) * 6,
+            ease: "none",
+          }, 0);
+        }
+
+        // Medallion is the foreground: lags a little, shrinks and dims as it
+        // leaves, so the eye follows it out rather than it just sliding off.
+        if (badgeRef.current) {
+          tl.to(badgeRef.current, {
+            yPercent: 6, scale: 0.86, opacity: 0.25, ease: "none",
+          }, 0);
+        }
+
+        // Quote + CTA travel with the page and fade early, so they're gone
+        // before they'd collide with the section below.
+        if (heroTextRef.current) {
+          tl.to(heroTextRef.current, { yPercent: -14, opacity: 0, ease: "none" }, 0);
+        }
+        return;
+      }
+
       // Measure the sticky box itself rather than window.innerWidth/innerHeight.
       // CSS `vh` (the 100vh/300vh in this component's own styles) resolves to
       // the browser's LARGE viewport (chrome retracted), while JS innerHeight
@@ -437,7 +478,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
         ) : (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
             style={{ zIndex: 22 }}>
-            <div className="relative rounded-full overflow-hidden"
+            <div ref={badgeRef} className="relative rounded-full overflow-hidden"
               style={{
                 // min() so it stays a circle that fits on both narrow phones
                 // and short landscape screens, never overflowing either axis.
@@ -445,7 +486,11 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
                 height: "min(68vw, 46vh)",
                 backgroundColor: "var(--hero-letterbox)",
                 boxShadow: "0 14px 40px rgba(0,0,0,0.22)",
-                animation: "heroBadgeIn 0.8s cubic-bezier(0.22,1,0.36,1) both",
+                // No CSS entrance here on purpose: GSAP owns this element's
+                // transform AND opacity for the scroll animation, and two
+                // systems writing the same properties fight. The collage
+                // fading in is enough life on load.
+                willChange: "transform, opacity",
               }}>
               <Image src="/hero.png" alt="AanyaByHiranya" fill priority
                 sizes="70vw" className="object-contain" />
@@ -458,7 +503,7 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             and stays full-size and legible for the whole pinned scroll. It
             leaves the screen only because it scrolls away with the rest of
             the sticky section once the pin releases past the hero. */}
-        <div className="absolute inset-x-0 bottom-20 md:bottom-24 flex flex-col items-center gap-5 px-6 text-center" style={{ zIndex: 25 }}>
+        <div ref={heroTextRef} className="absolute inset-x-0 bottom-20 md:bottom-24 flex flex-col items-center gap-5 px-6 text-center" style={{ zIndex: 25 }}>
           <p ref={quoteRef} className="font-serif text-2xl md:text-4xl text-forest dark:text-beige">
             {quotes[0]}
           </p>
@@ -481,20 +526,20 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             0%   { transform: translateY(-100%); }
             100% { transform: translateY(300%); }
           }
-          /* Only 'from' is declared: the tween then runs up to each tile's own
-             inline opacity, which differs per depth row, so one keyframe serves
-             every tile without needing a per-tile animation. */
+          /* Opacity ONLY — deliberately no transform. GSAP drives these tiles'
+             transform for the scroll animation, and two systems writing the
+             same property fight each other. Splitting them (CSS owns the
+             fade-in, GSAP owns the movement) lets both run cleanly.
+             Only 'from' is declared, so the tween runs up to each tile's own
+             inline opacity, which differs per depth row. */
           @keyframes heroTileIn {
-            from { opacity: 0; transform: translateY(16px); }
+            from { opacity: 0; }
           }
-          @keyframes heroBadgeIn {
-            from { opacity: 0; transform: scale(0.92); }
-          }
-          /* Entrance flourishes only — never a substitute for content being
-             visible. Anyone who's asked the OS to reduce motion just gets the
+          /* Entrance flourish only — never a substitute for content being
+             visible. Anyone who's asked the OS to reduce motion gets the
              final state immediately. */
           @media (prefers-reduced-motion: reduce) {
-            .cc, [style*="heroBadgeIn"] { animation: none !important; }
+            .cc { animation: none !important; }
           }
         `}</style>
       </div>
