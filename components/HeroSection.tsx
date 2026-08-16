@@ -14,25 +14,6 @@ gsap.registerPlugin(ScrollTrigger);
 // This tells it to ignore resizes where only the height changed on touch.
 ScrollTrigger.config({ ignoreMobileResize: true });
 
-const QUOTES = [
-  "Ready to love?",
-  "Art for everyday.",
-  "Made to inspire.",
-  "Curated for you.",
-  "Crafted with soul.",
-  "Beauty in details.",
-  "A piece of history.",
-];
-
-function shuffled(arr: string[]): string[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 // Hero lands top-center as a single continuous shape morph: the same element
 // clip-paths itself down from the full rectangle to a centered square (via an
 // animated inset()) while the "round" corner radius grows to 999px, so by the
@@ -105,20 +86,11 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
   const heroRef      = useRef<HTMLDivElement>(null);
   const collageRef   = useRef<HTMLDivElement>(null);
   const middleRef    = useRef<HTMLDivElement>(null);
-  const quoteRef     = useRef<HTMLParagraphElement>(null);
-  const quoteIndexRef = useRef(0);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
-  const [quotes, setQuotes] = useState(QUOTES);
   const isMobile = viewport.w > 0 && viewport.w < 768;
   // Nothing viewport-dependent renders until we've actually measured, so a
   // phone never fetches the desktop tile set for a frame before swapping.
   const measured = viewport.w > 0;
-
-  // Different quote order each visit — shuffled post-mount (not during the
-  // initial render) so server and client agree on the first paint.
-  useEffect(() => {
-    setQuotes(shuffled(QUOTES));
-  }, []);
 
   const desktopCollage = withRealImages(COLLAGE, heroImages);
   const mobileCollage  = withRealImages(COLLAGE_MOBILE, heroImages);
@@ -224,22 +196,6 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
           scrub: 1.2,
           pin: stickyRef.current,
           anticipatePin: 1,
-          onUpdate: self => {
-            // Cycles the quote text across the same scroll progress driving the
-            // rest of the hero, independent of the timeline's own tweened props.
-            const idx = Math.min(quotes.length - 1, Math.floor(self.progress * quotes.length));
-            if (idx === quoteIndexRef.current) return;
-            quoteIndexRef.current = idx;
-            const el = quoteRef.current;
-            if (!el) return;
-            gsap.to(el, {
-              opacity: 0, y: -6, duration: 0.15, ease: "power1.in",
-              onComplete: () => {
-                el.textContent = quotes[idx];
-                gsap.to(el, { opacity: 1, y: 0, duration: 0.25, ease: "power1.out" });
-              },
-            });
-          },
         },
       });
 
@@ -286,9 +242,9 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
 
     return () => ctx.revert();
     // isMobile is derived from viewport.w (already a dep), so it can't change
-    // without w changing — listed explicitly because the effect now branches
-    // on it for the mobile-only paint-cost reductions.
-  }, [viewport.w, isMobile, quotes]);
+    // without w changing — listed explicitly because the effect branches on it
+    // for the mobile-only paint-cost reductions.
+  }, [viewport.w, isMobile]);
 
   // Desktop keeps the 300vh pinned scroll-scrub. Mobile is exactly one screen
   // tall with nothing pinned, so a single thumb swipe carries you past the hero
@@ -419,15 +375,12 @@ export default function HeroSection({ heroImages = [] }: { heroImages?: string[]
             sizes="100vw" className="object-contain" />
         </div>
 
-        {/* Rotating quote + Discover CTA — a sibling of the hero image, not a
-            child, so it's unaffected by the hero's own shrink/clip-path morph
-            and stays full-size and legible for the whole pinned scroll. It
-            leaves the screen only because it scrolls away with the rest of
-            the sticky section once the pin releases past the hero. */}
-        <div className="absolute inset-x-0 bottom-20 md:bottom-24 flex flex-col items-center gap-5 px-6 text-center" style={{ zIndex: 25 }}>
-          <p ref={quoteRef} className="font-serif text-2xl md:text-4xl text-forest dark:text-beige">
-            {quotes[0]}
-          </p>
+        {/* Discover CTA — a sibling of the hero image, not a child, so it's
+            unaffected by the hero's own shrink/clip-path morph and stays
+            full-size and legible for the whole pinned scroll. It leaves the
+            screen only because it scrolls away with the rest of the sticky
+            section once the pin releases past the hero. */}
+        <div className="absolute inset-x-0 bottom-20 md:bottom-24 flex flex-col items-center px-6 text-center" style={{ zIndex: 25 }}>
           <Link href="/portfolio"
             className="text-[11px] tracking-[0.2em] uppercase text-forest dark:text-beige border-b border-forest/40 dark:border-beige/40 pb-1 hover:opacity-70 transition-opacity">
             Discover
